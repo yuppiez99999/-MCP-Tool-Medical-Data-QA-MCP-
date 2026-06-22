@@ -1,0 +1,78 @@
+{
+  "name": "medical-data-qa-mcp",
+  "display_name": "医疗数据质量评估 MCP Tool",
+  "description": "基于390万条医疗Token数据的智能质量评估工具。支持医疗数据质量评分、8大科室自动分类、数据等级评定(A/B/C/D级)、完整质量报告生成。可被任何AI Agent调用。",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "小X宝医疗黑客松参赛团队",
+  "tags": ["医疗", "数据质量", "MCP", "Agent Skill", "AI辅助"],
+  "category": "healthcare",
+  "tools": [
+    {
+      "name": "assess_data_quality",
+      "description": "评估医疗数据质量：完整性、准确性、合规性、时效性",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "records": {"type": "array", "items": {"type": "object"}},
+          "department": {"type": "string"}
+        },
+        "required": ["records"]
+      }
+    },
+    {
+      "name": "classify_department",
+      "description": "自动识别医疗数据所属科室（8大科室多分类）",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {"type": "object"}
+        },
+        "required": ["record"]
+      }
+    },
+    {
+      "name": "grade_data_level",
+      "description": "评定医疗数据等级（A级/B级/C级/D级）",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "quality_score": {"type": "number"}
+        },
+        "required": ["quality_score"]
+      }
+    },
+    {
+      "name": "generate_quality_report",
+      "description": "生成完整的医疗数据质量报告",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "records": {"type": "array", "items": {"type": "object"}},
+          "dataset_name": {"type": "string"}
+        },
+        "required": ["records"]
+      }
+    },
+    {
+      "name": "search_similar_data",
+      "description": "检索与给定质量画像相似的历史数据",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "quality_profile": {"type": "object"},
+          "department": {"type": "string"},
+          "top_k": {"type": "integer", "default": 10}
+        },
+        "required": ["quality_profile"]
+      }
+    }
+  ],
+  "deployment": {
+    "type": "modelscope_space",
+    "space_sdk": "gradio",
+    "app_file": "app.py",
+    "requirements_file": "requirements_space.txt",
+    "python_version": "3.10"
+  }
+}

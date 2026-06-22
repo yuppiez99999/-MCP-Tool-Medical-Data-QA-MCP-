@@ -1,0 +1,84 @@
+# ============================================================
+# 医疗数据质量评估 MCP Server - .gitignore
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志
+*.log
+logs/
+*.log.*
+
+# 缓存文件（可重新生成）
+outputs/data_sample.parquet
+outputs/data_stats.json
+outputs/__pycache__/
+
+# 数据库文件（SQLite，本地运行生成）
+outputs/*.db
+*.db-journal
+
+# 模型权重文件（太大，不纳入版本控制）
+outputs/healthcare_token_classifier.pt
+outputs/models/*.pt
+outputs/models/*.pth
+*.pt
+*.pth
+
+# 大数据文件（CSV原始数据，不纳入）
+outputs/valuation_detail*.csv
+outputs/valuation_summary*.csv
+*.csv.gz
+
+# 敏感配置
+config/account_info.json
+config/broker_config.json
+*.token
+*.credential
+.env.*
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.old
+
+# 构建产物
+build/
+dist/
+*.whl
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/

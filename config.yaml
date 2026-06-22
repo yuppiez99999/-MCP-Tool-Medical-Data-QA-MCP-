@@ -1,0 +1,168 @@
+# ============================================================
+# 医疗AI模型系统 - 全局配置文件
+# ============================================================
+
+# -----------------------------
+# 1. 数据集路径
+# -----------------------------
+data:
+  # 主数据集 CSV 路径（Windows 本地 - 北数所合规数据）
+  dataset_path: "e:/各种PY程序/01_数据源与数据处理/北数所A级Token_五领域上架/output/healthcare_token_A_B_20260620_154109.csv"
+  # 超算端数据集路径（与 hpc/deploy_config.sh 保持一致）
+  dataset_path_hpc: "/public/home/scno/sconqw05b/18-医疗AI模型系统/healthcare_token_A_B_100M.csv"
+  # 超算输出目录（worker 优先使用此值，若留空则回退到 output_dir）
+  output_dir_hpc: "/public/home/scno/sconqw05b/18-医疗AI模型系统/outputs_hpc"
+  # 主数据集行数（5,000,000 条 A级+B级 Token）
+  total_rows: 5000000
+  # 分块大小（行），500万数据推荐 100,000 每块（共50块）
+  chunk_size: 100000
+  # 采样规模（用于MCP工具快速响应，从500万中分层采样）
+  sample_size: 50000
+  # 缓存索引文件（Parquet格式，加速查询）
+  index_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/data_index.parquet"
+  sample_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/data_sample.parquet"
+  # 输出目录
+  output_dir: "e:/各种PY程序/18-医疗AI模型系统/outputs"
+  # 缓存目录（模型权重、中间文件）
+  cache_dir: "e:/各种PY程序/18-医疗AI模型系统/outputs/models"
+  # 审计日志 SQLite 路径
+  audit_db_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/audit_log.db"
+
+# -----------------------------
+# 2. 医疗科室与数据类型定义
+# -----------------------------
+categories:
+  radiology:     # 放射科
+    name_cn: "放射科"
+    base_price: 15.00
+    weight: 1.50
+    description: "影像数据稀缺，AI 训练需求高"
+  pathology:       # 病理科
+    name_cn: "病理科"
+    base_price: 14.00
+    weight: 1.40
+    description: "病理标注数据专业度高"
+  neurology:     # 神经内科
+    name_cn: "神经内科"
+    base_price: 13.50
+    weight: 1.35
+    description: "脑电/神经影像价值"
+  cardiology:    # 心血管科
+    name_cn: "心血管科"
+    base_price: 13.00
+    weight: 1.30
+    description: "ECG 数据临床价值高"
+  laboratory:    # 检验科
+    name_cn: "检验科"
+    base_price: 10.00
+    weight: 1.00
+    description: "检验报告结构化"
+  orthopedics:   # 骨科
+    name_cn: "骨科"
+    base_price: 9.50
+    weight: 0.95
+    description: "X-Ray 影像"
+  pediatrics:    # 儿科
+    name_cn: "儿科"
+    base_price: 9.00
+    weight: 0.90
+    description: "儿童发育数据"
+  emergency:     # 急诊科
+    name_cn: "急诊科"
+    base_price: 8.50
+    weight: 0.85
+    description: "分诊记录"
+
+data_types:
+  image:         { name_cn: "影像", weight: 1.40 }
+  text:          { name_cn: "文本", weight: 1.00 }
+  ecg:         { name_cn: "心电", weight: 1.30 }
+  lab:           { name_cn: "检验", weight: 0.95 }
+  pathology:      { name_cn: "病理", weight: 1.35 }
+  genetic:       { name_cn: "基因", weight: 1.50 }
+  vital:          { name_cn: "生命体征", weight: 0.80 }
+  other:         { name_cn: "其他", weight: 0.70 }
+
+# -----------------------------
+# 3. 资产估值参数
+# -----------------------------
+valuation:
+  # 质量系数指数（质量越高质量溢价）
+  quality_exponent: 2.0
+  # 稀有度系数: 1 / (类别占比^rarity_exponent
+  rarity_exponent: 0.5
+  # A 级额外溢价系数
+  level_a_bonus: 1.20
+  # B 级系数
+  level_b_bonus: 1.00
+  # 数据入表定价参考系数（批量折扣）
+  enterprise_discount: 0.85
+  # 合规最低分（低于此分数 token 不参与资产估值）
+  min_compliance_score: 95.0
+
+# -----------------------------
+# 4. 模型超参数
+# -----------------------------
+model:
+  classifier:
+    # 输入特征维度（自动计算：科室 8 + 数据类型 8 + 4 质量评分 + 哈希特征 = 28 左右）
+    input_dim: 28
+    hidden_dim: 128
+    hidden_layers: 3
+    dropout: 0.2
+    learning_rate: 0.001
+    batch_size: 2048
+    epochs: 50
+    # 多任务损失权重
+    loss_weights:
+      level: 1.0        # Token 等级二分类
+      quality: 0.5        # 质量分回归
+      category: 1.0        # 科室分类
+    # 早停
+    early_stop_patience: 5
+
+# -----------------------------
+# 5. 审计与合规
+# -----------------------------
+audit:
+  # 异常访问阈值（单位时间访问次数）
+  anomaly_threshold: 100
+  # 访问者最小声明长度
+  min_purpose_length: 5
+  # 是否记录实体聚合访问全链路
+  enable_full_trace: true
+  # 异常评分阈值（超过此分数记为高风险）
+  high_risk_threshold: 70.0
+
+# -----------------------------
+# 6. 北数所登记配置
+# -----------------------------
+data_exchange:
+  exchange_name: "北京国际大数据交易所（北数所）"
+  product_name: "医疗健康 A 级 / B 级 Token 数据集"
+  data_provider: "医疗数据联盟"
+  data_format: "CSV / JSON"
+  # 登记模板版本
+  template_version: "v1.0"
+  # 数据资产登记编号前缀
+  registration_prefix: "BJDE-HEALTH"
+  # 合规性声明
+  compliance_statement: |
+    本数据集严格遵循《数据安全法》《个人信息保护法》《数据出境安全评估办法》等法律法规。
+    数据已完成去标识化处理，token_id 与实体信息经过单向哈希处理，合规评分均达 95.0 分以上。
+    可用于医疗 AI 模型训练、数据资产入表、医学研究等合规场景。
+
+# -----------------------------
+# 7. 超算中心运行配置
+# -----------------------------
+hpc:
+  # 每个子任务处理的 token 数（仅当数据集不存在时用于伪数据压测）
+  sample_per_task: 10000000
+  # SLURM 数组任务数（与 token_valuation.slurm 中 --array=0-N 对应）
+  array_tasks: 16
+  # 每节点 CPU 核数
+  cpus_per_node: 64
+  # 单节点内存 (GB)
+  mem_per_node_gb: 110
+  # 超算分区
+  partition: "通用"

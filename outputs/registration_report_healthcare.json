@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "exchange_name": "北京国际大数据交易所（北数所）",
+    "product_name": "医疗健康 A 级 / B 级 Token 数据集",
+    "data_provider": "医疗数据联盟",
+    "data_format": "CSV / JSON",
+    "registration_id": "BJDE-HEALTH-20260622143312",
+    "registered_at": "2026-06-22 14:33:12",
+    "dataset_scale": "5,000,000 条 Token"
+  },
+  "quality": {
+    "quality_min": 94.0,
+    "quality_max": 100.0,
+    "quality_mean": 96.99873007600021,
+    "level_distribution": {
+      "A": 4169292,
+      "B": 830708
+    },
+    "category_distribution": {
+      "radiology": 625000,
+      "laboratory": 625000,
+      "pathology": 625000,
+      "cardiology": 625000,
+      "neurology": 625000,
+      "orthopedics": 625000,
+      "pediatrics": 625000,
+      "emergency": 625000
+    }
+  },
+  "value": {
+    "total_tokens": 100000,
+    "total_value": 4900275.92,
+    "total_enterprise_value": 4165219.43,
+    "avg_value_per_token": 49.0,
+    "by_category": [
+      {
+        "category_cn": "放射科",
+        "category": "radiology",
+        "count": 100000,
+        "total_value": 4900275.92,
+        "avg_value": 49.0027592,
+        "min": 39.36,
+        "max": 53.46
+      }
+    ],
+    "by_level": [
+      {
+        "token_level": "A",
+        "count": 83443,
+        "total_value": 4241691.26,
+        "avg_value": 50.83339836774804
+      },
+      {
+        "token_level": "B",
+        "count": 16557,
+        "total_value": 658584.66,
+        "avg_value": 39.776811016488494
+      }
+    ]
+  },
+  "dictionary": {
+    "token_id": {
+      "type": "string",
+      "description": "Token 唯一标识，用于合规审计与溯源",
+      "sample": "HEALTH-XXXX-XXXX"
+    },
+    "domain": {
+      "type": "string",
+      "description": "数据所属领域",
+      "sample": "healthcare"
+    },
+    "category": {
+      "type": "string",
+      "description": "医疗科室类别（放射科/检验科/病理科/心血管科/神经内科/骨科/儿科/急诊科）",
+      "sample": "radiology"
+    },
+    "data_type": {
+      "type": "string",
+      "description": "数据形态（影像/文本/心电/检验/病理/基因/生命体征等）",
+      "sample": "image"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "脱敏后的实体标识，支持同一实体跨科室聚合",
+      "sample": "ENT-XXXX"
+    },
+    "data_quality_score": {
+      "type": "float",
+      "description": "综合数据质量分（0-100）",
+      "sample": 98.5
+    },
+    "token_level": {
+      "type": "string",
+      "description": "Token 等级：A 高质量 / B 标准质量",
+      "sample": "A"
+    },
+    "completeness": {
+      "type": "float",
+      "description": "数据完整性分（0-100）",
+      "sample": 99.0
+    },
+    "accuracy": {
+      "type": "float",
+      "description": "数据准确性分（0-100）",
+      "sample": 97.0
+    },
+    "timeliness": {
+      "type": "float",
+      "description": "时效性分（0-100）",
+      "sample": 95.0
+    },
+    "compliance_score": {
+      "type": "float",
+      "description": "合规性分（0-100），≥95 视为资产合格",
+      "sample": 100.0
+    },
+    "created_at": {
+      "type": "datetime",
+      "description": "Token 创建时间",
+      "sample": "2026-06-16 08:00:00"
+    }
+  },
+  "sample": {
+    "count": 5,
+    "records": [
+      {
+        "token_id": "CBCD5D853AE1CD70",
+        "category": "radiology",
+        "data_type": "other",
+        "token_level": "A",
+        "data_quality_score": 99.38,
+        "completeness": 99.68,
+        "accuracy": 98.95,
+        "timeliness": 99.59,
+        "compliance_score": 100.0,
+        "created_at": "2026-06-20T15:41:09"
+      },
+      {
+        "token_id": "FBEEC10FAA2E95DD",
+        "category": "radiology",
+        "data_type": "other",
+        "token_level": "A",
+        "data_quality_score": 96.56,
+        "completeness": 98.23,
+        "accuracy": 97.04,
+        "timeliness": 96.56,
+        "compliance_score": 100.0,
+        "created_at": "2026-06-20T15:41:09"
+      },
+      {
+        "token_id": "02544BBA5BE0DED4",
+        "category": "radiology",
+        "data_type": "other",
+        "token_level": "A",
+        "data_quality_score": 99.86,
+        "completeness": 97.83,
+        "accuracy": 95.74,
+        "timeliness": 95.83,
+        "compliance_score": 100.0,
+        "created_at": "2026-06-20T15:41:09"
+      },
+      {
+        "token_id": "AF34448B39B6D20B",
+        "category": "radiology",
+        "data_type": "other",
+        "token_level": "A",
+        "data_quality_score": 98.64,
+        "completeness": 97.51,
+        "accuracy": 99.19,
+        "timeliness": 98.31,
+        "compliance_score": 100.0,
+        "created_at": "2026-06-20T15:41:09"
+      },
+      {
+        "token_id": "8EBE9C0ADD3EC93F",
+        "category": "radiology",
+        "data_type": "other",
+        "token_level": "A",
+        "data_quality_score": 97.89,
+        "completeness": 99.37,
+        "accuracy": 95.45,
+        "timeliness": 95.39,
+        "compliance_score": 100.0,
+        "created_at": "2026-06-20T15:41:09"
+      }
+    ]
+  },
+  "compliance_statement": "本数据集严格遵循《数据安全法》《个人信息保护法》《数据出境安全评估办法》等法律法规。\n数据已完成去标识化处理，token_id 与实体信息经过单向哈希处理，合规评分均达 95.0 分以上。\n可用于医疗 AI 模型训练、数据资产入表、医学研究等合规场景。\n"
+}
