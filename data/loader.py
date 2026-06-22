@@ -19,9 +19,19 @@ import numpy as np
 # ============================================================
 # 常量
 # ============================================================
-DATASET_PATH = r"e:\各种PY程序\01_数据源与数据处理\北数所A级Token_五领域上架\output\healthcare_token_A_B_20260620_154109.csv"
-SAMPLE_PATH = r"e:\各种PY程序\18-医疗AI模型系统\outputs\data_sample.parquet"
-STATS_PATH = r"e:\各种PY程序\18-医疗AI模型系统\outputs\data_stats.json"
+# 数据集路径（请通过环境变量或config.yaml配置，此处为兜底默认值）
+DATASET_PATH = os.environ.get(
+    "MEDICAL_DATASET_PATH",
+    "./data/healthcare_token_dataset.csv"
+)
+SAMPLE_PATH = os.environ.get(
+    "MEDICAL_SAMPLE_PATH",
+    "./outputs/data_sample.parquet"
+)
+STATS_PATH = os.environ.get(
+    "MEDICAL_STATS_PATH",
+    "./outputs/data_stats.json"
+)
 SAMPLE_SIZE = 50000  # 分层采样规模
 CHUNK_SIZE = 100000  # 分块读取
 
