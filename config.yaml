@@ -6,12 +6,12 @@
 # 1. 数据集路径
 # -----------------------------
 data:
-  # 主数据集 CSV 路径（Windows 本地 - 北数所合规数据）
-  dataset_path: "e:/各种PY程序/01_数据源与数据处理/北数所A级Token_五领域上架/output/healthcare_token_A_B_20260620_154109.csv"
-  # 超算端数据集路径（与 hpc/deploy_config.sh 保持一致）
-  dataset_path_hpc: "/public/home/scno/sconqw05b/18-医疗AI模型系统/healthcare_token_A_B_100M.csv"
-  # 超算输出目录（worker 优先使用此值，若留空则回退到 output_dir）
-  output_dir_hpc: "/public/home/scno/sconqw05b/18-医疗AI模型系统/outputs_hpc"
+  # 主数据集 CSV 路径（请替换为您的本地路径）
+  dataset_path: "./data/healthcare_token_dataset.csv"
+  # 超算端数据集路径（如使用HPC，请替换为您的HPC路径）
+  dataset_path_hpc: "/path/to/hpc/healthcare_token_dataset.csv"
+  # 超算输出目录
+  output_dir_hpc: "/path/to/hpc/outputs"
   # 主数据集行数（5,000,000 条 A级+B级 Token）
   total_rows: 5000000
   # 分块大小（行），500万数据推荐 100,000 每块（共50块）
@@ -19,14 +19,14 @@ data:
   # 采样规模（用于MCP工具快速响应，从500万中分层采样）
   sample_size: 50000
   # 缓存索引文件（Parquet格式，加速查询）
-  index_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/data_index.parquet"
-  sample_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/data_sample.parquet"
+  index_path: "./outputs/data_index.parquet"
+  sample_path: "./outputs/data_sample.parquet"
   # 输出目录
-  output_dir: "e:/各种PY程序/18-医疗AI模型系统/outputs"
+  output_dir: "./outputs"
   # 缓存目录（模型权重、中间文件）
-  cache_dir: "e:/各种PY程序/18-医疗AI模型系统/outputs/models"
+  cache_dir: "./outputs/models"
   # 审计日志 SQLite 路径
-  audit_db_path: "e:/各种PY程序/18-医疗AI模型系统/outputs/audit_log.db"
+  audit_db_path: "./outputs/audit_log.db"
 
 # -----------------------------
 # 2. 医疗科室与数据类型定义

@@ -82,3 +82,7 @@ dist/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# HPC部署脚本（包含超算账户信息，不公开）
+hpc/
+DEPLOYMENT_GUIDE.md
