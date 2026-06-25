@@ -1,0 +1,696 @@
+{
+  "total": 58,
+  "correct": 42,
+  "accuracy": 0.7241379310344828,
+  "per_department": {
+    "radiology": {
+      "name_cn": "放射科",
+      "correct": 5,
+      "total": 8,
+      "accuracy": 0.625
+    },
+    "pathology": {
+      "name_cn": "病理科",
+      "correct": 6,
+      "total": 8,
+      "accuracy": 0.75
+    },
+    "neurology": {
+      "name_cn": "神经内科",
+      "correct": 5,
+      "total": 8,
+      "accuracy": 0.625
+    },
+    "cardiovascular": {
+      "name_cn": "心血管科",
+      "correct": 7,
+      "total": 8,
+      "accuracy": 0.875
+    },
+    "laboratory": {
+      "name_cn": "检验科",
+      "correct": 5,
+      "total": 8,
+      "accuracy": 0.625
+    },
+    "orthopedics": {
+      "name_cn": "骨科",
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334
+    },
+    "pediatrics": {
+      "name_cn": "儿科",
+      "correct": 4,
+      "total": 6,
+      "accuracy": 0.6666666666666666
+    },
+    "emergency": {
+      "name_cn": "急诊科",
+      "correct": 5,
+      "total": 6,
+      "accuracy": 0.8333333333333334
+    }
+  },
+  "model_loaded": true,
+  "test_cases": [
+    {
+      "index": 1,
+      "text": "CT scan of the brain shows acute ischemic stroke in the left hemisphere",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.25,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 2,
+      "text": "MRI of the abdomen with contrast showing liver mass suspicious for hepatocellular carcinoma",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.29,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 3,
+      "text": "Chest X-ray reveals bilateral pulmonary infiltrates consistent with pneumonia",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.17,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 4,
+      "text": "CT angiography of coronary arteries showing significant stenosis in LAD",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.37,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 5,
+      "text": "Mammogram demonstrating suspicious microcalcifications in the right breast",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.19,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 6,
+      "text": "Ultrasound of thyroid showing hypoechoic nodule with irregular borders",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.16,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 7,
+      "text": "PET-CT scan demonstrating hypermetabolic lymph nodes in the mediastinum",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.23,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 8,
+      "text": "Bone scan showing multiple areas of increased uptake suggestive of metastases",
+      "true_dept": "radiology",
+      "true_dept_cn": "放射科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.18,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 9,
+      "text": "Histopathology of colon biopsy showing well-differentiated adenocarcinoma",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.25,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 10,
+      "text": "Fine needle aspiration cytology of thyroid nodule revealing papillary carcinoma",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.18,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 11,
+      "text": "Immunohistochemistry staining positive for ER and PR in breast cancer specimen",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.43,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 12,
+      "text": "Bone marrow biopsy showing hypercellularity with increased blasts consistent with AML",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.17,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 13,
+      "text": "Histological examination of skin biopsy revealing basal cell carcinoma",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.38,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 14,
+      "text": "Frozen section analysis of sentinel lymph node during melanoma surgery",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.27,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 15,
+      "text": "Cytopathology of pleural effusion showing malignant cells consistent with adenocarcinoma",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.17,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 16,
+      "text": "Molecular pathology testing for EGFR mutations in non-small cell lung cancer",
+      "true_dept": "pathology",
+      "true_dept_cn": "病理科",
+      "pred_dept": "pathology",
+      "pred_dept_cn": "病理科",
+      "confidence": 0.52,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 17,
+      "text": "Electroencephalogram showing generalized spike and wave discharges consistent with epilepsy",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.15,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 18,
+      "text": "Patient presenting with progressive memory decline and cognitive impairment suspected Alzheimer disease",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.62,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 19,
+      "text": "Parkinson disease patient with resting tremor bradykinesia and rigidity",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.5,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 20,
+      "text": "Multiple sclerosis patient with demyelinating lesions on MRI and oligoclonal bands in CSF",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.26,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 21,
+      "text": "Acute ischemic stroke patient with right-sided weakness and aphasia",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.19,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 22,
+      "text": "Migraine headache with aura visual disturbances and unilateral throbbing pain",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.25,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 23,
+      "text": "Guillain-Barre syndrome with ascending paralysis and areflexia",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.15,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 24,
+      "text": "Amyotrophic lateral sclerosis with progressive muscle weakness and fasciculations",
+      "true_dept": "neurology",
+      "true_dept_cn": "神经内科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.15,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 25,
+      "text": "Electrocardiogram demonstrating ST-elevation myocardial infarction in anterior leads",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.46,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 26,
+      "text": "Echocardiogram showing reduced ejection fraction of 35% consistent with heart failure",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.22,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 27,
+      "text": "Coronary angiography revealing triple vessel disease with significant stenosis",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.36,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 28,
+      "text": "Patient with essential hypertension on multiple antihypertensive medications",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.2,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 29,
+      "text": "Atrial fibrillation with rapid ventricular response on ECG requiring rate control",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.22,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 30,
+      "text": "Atherosclerotic cardiovascular disease with carotid artery stenosis on Doppler ultrasound",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.7,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 31,
+      "text": "Cardiac catheterization for evaluation of chest pain and coronary artery disease",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.39,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 32,
+      "text": "Congestive heart failure exacerbation with pulmonary edema and elevated BNP",
+      "true_dept": "cardiovascular",
+      "true_dept_cn": "心血管科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.18,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 33,
+      "text": "Complete blood count showing leukocytosis with neutrophilia and left shift",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "laboratory",
+      "pred_dept_cn": "检验科",
+      "confidence": 0.2,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 34,
+      "text": "Blood chemistry panel demonstrating elevated liver enzymes ALT and AST",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "laboratory",
+      "pred_dept_cn": "检验科",
+      "confidence": 0.3,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 35,
+      "text": "Urinalysis showing proteinuria hematuria and casts consistent with nephrotic syndrome",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.15,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 36,
+      "text": "Clinical chemistry test results showing hyperglycemia and elevated HbA1c",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "laboratory",
+      "pred_dept_cn": "检验科",
+      "confidence": 0.51,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 37,
+      "text": "Coagulation panel with prolonged PT and INR consistent with warfarin therapy",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "neurology",
+      "pred_dept_cn": "神经内科",
+      "confidence": 0.14,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 38,
+      "text": "Blood gas analysis showing metabolic acidosis with compensatory respiratory alkalosis",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "laboratory",
+      "pred_dept_cn": "检验科",
+      "confidence": 0.35,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 39,
+      "text": "Immunoassay for cardiac troponin I showing elevated levels indicating myocardial injury",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.26,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 40,
+      "text": "Microbiology culture of wound growing methicillin-resistant Staphylococcus aureus",
+      "true_dept": "laboratory",
+      "true_dept_cn": "检验科",
+      "pred_dept": "laboratory",
+      "pred_dept_cn": "检验科",
+      "confidence": 0.15,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 41,
+      "text": "X-ray showing comminuted fracture of the femoral shaft following trauma",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.37,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 42,
+      "text": "MRI of lumbar spine demonstrating L4-L5 disc herniation with nerve root compression",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.27,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 43,
+      "text": "Total knee arthroplasty for end-stage osteoarthritis of the knee joint",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.3,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 44,
+      "text": "Spinal fusion surgery for degenerative disc disease with instability",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.39,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 45,
+      "text": "Orthopedic implant for fracture fixation using intramedullary nail",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "orthopedics",
+      "pred_dept_cn": "骨科",
+      "confidence": 0.59,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 46,
+      "text": "Rotator cuff tear of the shoulder confirmed on MRI requiring arthroscopic repair",
+      "true_dept": "orthopedics",
+      "true_dept_cn": "骨科",
+      "pred_dept": "radiology",
+      "pred_dept_cn": "放射科",
+      "confidence": 0.32,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 47,
+      "text": "Neonatal intensive care unit patient born prematurely at 28 weeks gestation",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "pediatrics",
+      "pred_dept_cn": "儿科",
+      "confidence": 0.54,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 48,
+      "text": "Pediatric patient with acute lymphoblastic leukemia undergoing induction chemotherapy",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.21,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 49,
+      "text": "Child with measles infection presenting with fever cough and maculopapular rash",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "pediatrics",
+      "pred_dept_cn": "儿科",
+      "confidence": 0.29,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 50,
+      "text": "Infant with failure to thrive and feeding difficulties requiring nutritional support",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.18,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 51,
+      "text": "Pediatric asthma exacerbation with wheezing and shortness of breath",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "pediatrics",
+      "pred_dept_cn": "儿科",
+      "confidence": 0.25,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 52,
+      "text": "Newborn screening test positive for phenylketonuria requiring dietary management",
+      "true_dept": "pediatrics",
+      "true_dept_cn": "儿科",
+      "pred_dept": "pediatrics",
+      "pred_dept_cn": "儿科",
+      "confidence": 0.22,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 53,
+      "text": "Emergency department patient with severe trauma and hypovolemic shock from motor vehicle accident",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.65,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 54,
+      "text": "Cardiac arrest patient receiving CPR and advanced cardiovascular life support in ER",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "cardiovascular",
+      "pred_dept_cn": "未知",
+      "confidence": 0.24,
+      "method": "ML",
+      "correct": false
+    },
+    {
+      "index": 55,
+      "text": "Sepsis patient with hypotension tachycardia and elevated lactate requiring ICU admission",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.45,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 56,
+      "text": "Acute respiratory distress syndrome patient requiring mechanical ventilation in emergency",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.35,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 57,
+      "text": "Emergency resuscitation of critically ill patient with multiple organ dysfunction syndrome",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.38,
+      "method": "ML",
+      "correct": true
+    },
+    {
+      "index": 58,
+      "text": "Toxicology patient with drug overdose and altered mental status in emergency room",
+      "true_dept": "emergency",
+      "true_dept_cn": "急诊科",
+      "pred_dept": "emergency",
+      "pred_dept_cn": "急诊科",
+      "confidence": 0.25,
+      "method": "ML",
+      "correct": true
+    }
+  ]
+}
