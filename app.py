@@ -40,9 +40,19 @@ def ui_assess_quality(input_json: str, department: str):
 
 
 def ui_classify_department(input_json: str):
-    """科室分类界面回调"""
+    """科室分类界面回调（JSON记录）"""
     try:
         record = json.loads(input_json) if isinstance(input_json, str) else input_json
+        result = server.classify_department(record)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return f"错误: {e}"
+
+
+def ui_classify_department_text(text: str):
+    """科室分类界面回调（文本输入）"""
+    try:
+        record = {"text": text, "data_type": "text"}
         result = server.classify_department(record)
         return json.dumps(result, ensure_ascii=False, indent=2)
     except Exception as e:
@@ -111,6 +121,30 @@ def ui_assess_with_evidence(input_json: str, query: str, source: str, evidence_c
         return f"错误: {e}"
 
 
+def ui_evidence_report(input_json: str, dataset_name: str, source: str, evidence_per_dim: int, department: str):
+    """带文献引用的质量报告界面回调"""
+    try:
+        records = json.loads(input_json) if isinstance(input_json, str) else input_json
+        if not isinstance(records, list):
+            return "错误: 请输入JSON数组格式"
+        source_map = {
+            "英文论文": "paper_en",
+            "中文论文": "paper_cn",
+            "临床指南": "guide",
+            "临床试验": "trial",
+        }
+        src = source_map.get(source, "paper_en")
+        dept = department if department != "自动检测" else None
+        result = server.generate_evidence_based_report(
+            records, dataset_name, dept, evidence_per_dim, src
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError as e:
+        return f"JSON解析错误: {e}"
+    except Exception as e:
+        return f"错误: {e}"
+
+
 # ============================================================
 # 示例数据
 # ============================================================
@@ -143,9 +177,9 @@ def create_ui():
 
         > 小X宝医疗黑客松参赛作品 | 基于390万条医疗Token数据 | KnowS医学循证检索
 
-        **功能**: 评估医疗数据质量、自动科室分类、数据等级评定、生成质量报告、医学循证文献检索
+        **功能**: 评估医疗数据质量、自动科室分类、数据等级评定、循证质量报告、医学循证文献检索
 
-        **MCP工具**: 7个工具可被任何AI Agent调用，支持ModelScope部署
+        **MCP工具**: 8个工具可被任何AI Agent调用，支持ModelScope部署
         """)
 
         with gr.Tab("📊 质量评估"):
@@ -166,15 +200,30 @@ def create_ui():
             btn.click(ui_assess_quality, [input_json, dept_choice], [output, output])
 
         with gr.Tab("🔬 科室分类"):
+            gr.Markdown(
+                "### 🔬 科室自动分类\n"
+                "支持两种模式：**ML模型**（基于文本内容，KnowS文献训练）"
+                " 和 **规则引擎**（基于数据类型映射）"
+            )
             with gr.Row():
                 with gr.Column():
-                    single_input = gr.Textbox(
-                        label="单条记录 (JSON)", value=SAMPLE_SINGLE, lines=10,
-                    )
-                    btn2 = gr.Button("🏷️ 分类科室", variant="primary")
+                    with gr.Tabs():
+                        with gr.Tab("文本分类（ML模型）"):
+                            text_input = gr.Textbox(
+                                label="数据描述文本",
+                                value="CT scan of brain showing acute ischemic stroke",
+                                lines=4, placeholder="输入数据描述或元信息...",
+                            )
+                            btn2a = gr.Button("🏷️ ML模型分类", variant="primary")
+                        with gr.Tab("记录分类（JSON）"):
+                            single_input = gr.Textbox(
+                                label="单条记录 (JSON)", value=SAMPLE_SINGLE, lines=6,
+                            )
+                            btn2 = gr.Button("🏷️ 规则引擎分类", variant="secondary")
                 with gr.Column():
-                    output2 = gr.Textbox(label="分类结果", lines=15)
+                    output2 = gr.Textbox(label="分类结果", lines=18)
             btn2.click(ui_classify_department, [single_input], [output2])
+            btn2a.click(ui_classify_department_text, [text_input], [output2])
 
         with gr.Tab("📈 等级评定"):
             with gr.Row():
@@ -246,6 +295,40 @@ def create_ui():
             btn6.click(ui_assess_with_evidence,
                        [ev_input, ev_query, ev_source, ev_count, ev_dept],
                        [output6])
+
+        with gr.Tab("📑 循证质量报告"):
+            gr.Markdown(
+                "### 📑 带循证文献引用的质量报告\n"
+                "自动识别质量薄弱维度 → 针对每个维度检索医学文献 → 生成带引用的改进建议"
+            )
+            with gr.Row():
+                with gr.Column():
+                    erp_dataset = gr.Textbox(
+                        label="数据集名称",
+                        value="测试数据集",
+                        placeholder="输入数据集名称",
+                    )
+                    erp_dept = gr.Dropdown(
+                        ["自动检测", "放射科", "病理科", "神经内科", "心血管科",
+                         "检验科", "骨科", "儿科", "急诊科"],
+                        value="自动检测", label="指定科室（可选）",
+                    )
+                    erp_input = gr.Textbox(
+                        label="医疗数据记录 (JSON数组)",
+                        value=SAMPLE_RECORDS, lines=6,
+                    )
+                    with gr.Row():
+                        erp_source = gr.Dropdown(
+                            ["英文论文", "中文论文", "临床指南", "临床试验"],
+                            value="英文论文", label="文献数据源",
+                        )
+                        erp_per_dim = gr.Slider(1, 5, value=2, step=1, label="每维度文献数")
+                    btn7 = gr.Button("📊 生成循证质量报告", variant="primary")
+                with gr.Column():
+                    output7 = gr.Textbox(label="循证质量报告结果", lines=28)
+            btn7.click(ui_evidence_report,
+                       [erp_input, erp_dataset, erp_source, erp_per_dim, erp_dept],
+                       [output7])
 
         with gr.Tab("🔧 MCP工具列表"):
             tools = server.list_tools()

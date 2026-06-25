@@ -10,6 +10,9 @@
   3. grade_data_level      — 数据等级评定（A/B/C级）
   4. generate_quality_report — 生成完整质量报告+改进建议
   5. search_similar_data   — 检索相似质量画像的历史数据
+  6. search_medical_evidence — KnowS医学循证检索（论文/指南/试验）
+  7. assess_with_evidence  — 质量评估+文献检索联动
+  8. generate_evidence_based_report — 带循证文献引用的质量报告
 
 数据基础：390万条医疗健康Token数据，覆盖8大科室
 部署目标：ModelScope MCP Server / Space
@@ -77,9 +80,33 @@ class MedicalDataQAMCPServer:
     }
 
     def __init__(self):
-        self.version = "1.1.0"
+        self.version = "1.2.0"
         self.name = "medical-data-qa-mcp"
         self.knows_api_key = os.environ.get("KNOWS_API_KEY", "")
+        self.department_model = self._load_department_model()
+
+    def _load_department_model(self) -> Optional[Dict[str, Any]]:
+        """加载文献训练的科室分类模型"""
+        try:
+            import pickle
+            model_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "outputs",
+                "department_classifier.pkl",
+            )
+            if not os.path.exists(model_path):
+                return None
+            with open(model_path, "rb") as f:
+                model_data = pickle.load(f)
+            return {
+                "pipeline": model_data["pipeline"],
+                "label_names": model_data["label_names"],
+                "top_keywords": model_data.get("top_keywords", {}),
+                "training_samples": model_data.get("training_samples", 0),
+                "model_type": model_data.get("model_type", "unknown"),
+            }
+        except Exception:
+            return None
 
     # ============================================================
     # Tool 1: assess_data_quality — 评估医疗数据质量
@@ -162,37 +189,122 @@ class MedicalDataQAMCPServer:
     def classify_department(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """自动识别医疗数据所属科室
 
+        优先使用文献训练的ML模型（基于文本内容），
+        不可用时回退到规则引擎（基于data_type映射）。
+
         Args:
-            record: 医疗数据记录，包含 data_type, category 等字段
+            record: 医疗数据记录，包含 data_type, text/description 等字段
 
         Returns:
-            科室分类结果，包含主科室、置信度、备选科室
+            科室分类结果，包含主科室、置信度、备选科室、分类依据
         """
-        dept = self._infer_department(record)
-        confidence = self._calc_confidence(record, dept)
+        # 尝试使用ML模型分类（需要文本内容）
+        text_content = (
+            record.get("text", "")
+            or record.get("description", "")
+            or record.get("title", "")
+            or record.get("content", "")
+        )
 
-        # 备选科室（基于数据类型的次优匹配）
-        alternatives = []
+        use_ml = (
+            self.department_model is not None
+            and len(text_content.strip()) > 10
+        )
+
+        if use_ml:
+            ml_result = self._ml_classify_department(text_content)
+            primary = ml_result["primary"]
+            confidence = ml_result["confidence"]
+            alternatives = ml_result["alternatives"]
+            method = "ml_model"
+            top_keywords = ml_result.get("top_keywords", [])
+        else:
+            primary = self._infer_department(record)
+            confidence = self._calc_confidence(record, primary)
+            data_type = record.get("data_type", "text")
+            alternatives = []
+            for d, info in self.DEPARTMENTS.items():
+                if d != primary:
+                    alt_score = self._match_score(data_type, d)
+                    if alt_score > 0.3:
+                        alternatives.append({
+                            "department": d,
+                            "name_cn": info["name_cn"],
+                            "score": round(alt_score, 2),
+                        })
+            alternatives.sort(key=lambda x: x["score"], reverse=True)
+            alternatives = alternatives[:3]
+            method = "rule_based"
+            top_keywords = []
+
         data_type = record.get("data_type", "text")
-        for d, info in self.DEPARTMENTS.items():
-            if d != dept:
-                alt_score = self._match_score(data_type, d)
-                if alt_score > 0.3:
-                    alternatives.append({
-                        "department": d,
-                        "name_cn": info["name_cn"],
-                        "score": round(alt_score, 2),
-                    })
-        alternatives.sort(key=lambda x: x["score"], reverse=True)
 
-        return {
+        result = {
             "tool": "classify_department",
-            "primary_department": dept,
-            "department_cn": self.DEPARTMENTS.get(dept, {}).get("name_cn", "未知"),
+            "primary_department": primary,
+            "department_cn": self.DEPARTMENTS.get(primary, {}).get("name_cn", "未知"),
             "confidence": round(confidence, 2),
-            "alternatives": alternatives[:3],
+            "alternatives": alternatives,
             "data_type": data_type,
             "data_type_cn": self.DATA_TYPES.get(data_type, {}).get("name_cn", "未知"),
+            "classification_method": method,
+        }
+
+        if use_ml:
+            result["model_info"] = {
+                "model_type": self.department_model["model_type"],
+                "training_samples": self.department_model["training_samples"],
+                "training_source": "knows_paper_en",
+                "top_keywords": top_keywords,
+            }
+
+        return result
+
+    def _ml_classify_department(self, text: str) -> Dict[str, Any]:
+        """使用ML模型进行科室分类"""
+        model = self.department_model
+        pipeline = model["pipeline"]
+        label_names = model["label_names"]
+
+        prediction = pipeline.predict([text])[0]
+        probabilities = pipeline.predict_proba([text])[0]
+
+        # 获取Top3备选
+        top_indices = probabilities.argsort()[-3:][::-1]
+        alternatives = []
+        for idx in top_indices[1:]:
+            dept_code = label_names[idx]
+            alternatives.append({
+                "department": dept_code,
+                "name_cn": self.DEPARTMENTS.get(dept_code, {}).get("name_cn", dept_code),
+                "score": round(float(probabilities[idx]), 4),
+            })
+
+        # 获取分类关键词
+        top_keywords = []
+        try:
+            feature_names = pipeline.named_steps["tfidf"].get_feature_names_out()
+            coef = pipeline.named_steps["clf"].coef_
+            pred_idx = label_names.index(prediction)
+            # 简单获取文本中出现的高权重词
+            text_words = set(text.lower().split())
+            dept_keywords = model.get("top_keywords", {}).get(prediction, [])
+            for word, weight in dept_keywords[:10]:
+                if word.lower() in text_words or any(w in word for w in text_words if len(w) > 3):
+                    top_keywords.append({"word": word, "weight": round(weight, 4)})
+            if not top_keywords:
+                top_keywords = [
+                    {"word": w, "weight": round(s, 4)}
+                    for w, s in dept_keywords[:5]
+                ]
+        except Exception:
+            pass
+
+        return {
+            "primary": prediction,
+            "confidence": float(probabilities.max()),
+            "alternatives": alternatives,
+            "top_keywords": top_keywords,
         }
 
     # ============================================================
@@ -554,6 +666,256 @@ class MedicalDataQAMCPServer:
         }
 
     # ============================================================
+    # Tool 8: generate_evidence_based_report — 带文献引用的质量报告
+    # ============================================================
+    def generate_evidence_based_report(
+        self,
+        records: List[Dict[str, Any]],
+        dataset_name: str = "未命名数据集",
+        department: Optional[str] = None,
+        evidence_per_dimension: int = 2,
+        source: str = "paper_en",
+    ) -> Dict[str, Any]:
+        """生成带循证医学文献引用的质量报告
+
+        自动识别质量薄弱维度，针对每个维度检索相关医学文献，
+        生成带有文献引用的改进建议和完整报告。
+
+        Args:
+            records: 医疗数据记录列表
+            dataset_name: 数据集名称
+            department: 指定科室（可选）
+            evidence_per_dimension: 每个维度引用文献数
+            source: 文献数据源 (paper_en/paper_cn/guide)
+
+        Returns:
+            带文献引用的完整质量报告
+        """
+        if not records:
+            return {"error": "记录列表不能为空"}
+
+        if not HAS_REQUESTS or not self.knows_api_key:
+            return {
+                "error": "KnowS API 不可用",
+                "hint": "请安装 requests 并配置 KNOWS_API_KEY 环境变量",
+            }
+
+        assessment = self.assess_data_quality(records, department)
+        if "error" in assessment:
+            return assessment
+
+        avg_score = assessment["average_quality_score"]
+        primary_dept = ""
+        max_count = 0
+        for dept, cnt in assessment["department_distribution"].items():
+            if cnt > max_count:
+                max_count = cnt
+                primary_dept = dept
+        dept_cn = self.DEPARTMENTS.get(primary_dept, {}).get("name_cn", "")
+
+        dim_avg = {}
+        for dim in self.QUALITY_DIMENSIONS:
+            scores = [r["dimension_scores"][dim] for r in assessment["details"]]
+            dim_avg[dim] = sum(scores) / len(scores)
+
+        weak_dims = [dim for dim, score in dim_avg.items() if score < 75]
+
+        dim_queries = {
+            "completeness": {
+                "cn": "数据完整性 缺失值 数据质量",
+                "en": "data quality completeness missing data electronic health record",
+            },
+            "accuracy": {
+                "cn": "数据准确性 质量控制 数据验证",
+                "en": "data accuracy quality control validation medical record",
+            },
+            "timeliness": {
+                "cn": "数据时效性 实时数据 更新频率",
+                "en": "real-time data timeliness clinical decision support",
+            },
+            "compliance": {
+                "cn": "数据合规性 隐私保护 HIPAA 数据安全",
+                "en": "healthcare data privacy compliance HIPAA security",
+            },
+        }
+
+        dept_en_map = {
+            "radiology": "radiology imaging",
+            "pathology": "pathology histopathology",
+            "neurology": "neurology neuroscience",
+            "cardiovascular": "cardiovascular cardiology",
+            "laboratory": "laboratory medicine clinical lab",
+            "orthopedics": "orthopedics orthopaedic",
+            "pediatrics": "pediatrics paediatric",
+            "emergency": "emergency medicine critical care",
+        }
+
+        dim_cn_map = {
+            "completeness": "完整性",
+            "accuracy": "准确性",
+            "timeliness": "时效性",
+            "compliance": "合规性",
+        }
+
+        evidence_by_dim = {}
+        all_evidences = []
+        ref_index = 1
+
+        target_dims = weak_dims if weak_dims else self.QUALITY_DIMENSIONS
+
+        for dim in target_dims:
+            lang_key = "en" if source in ("paper_en", "guide", "trial") else "cn"
+            query = dim_queries[dim][lang_key]
+            if source == "paper_en" and primary_dept:
+                dept_term = dept_en_map.get(primary_dept, "")
+                if dept_term:
+                    query = f"{dept_term} {query}"
+            elif source == "paper_cn" and dept_cn:
+                query = f"{dept_cn} {query}"
+
+            ev_result = self.search_medical_evidence(query, source, evidence_per_dimension)
+
+            if "error" not in ev_result and ev_result.get("evidences"):
+                refs = []
+                for ev in ev_result["evidences"]:
+                    ref = {
+                        "ref_index": ref_index,
+                        "id": ev["id"],
+                        "title": ev["title"],
+                        "journal": ev.get("journal", ""),
+                        "publish_date": ev.get("publish_date", ""),
+                        "impact_factor": ev.get("impact_factor", ""),
+                        "doi": ev.get("doi", ""),
+                        "authors": ev.get("authors", []),
+                        "study_type": ev.get("study_type", ""),
+                    }
+                    refs.append(ref)
+                    all_evidences.append(ref)
+                    ref_index += 1
+                evidence_by_dim[dim] = {
+                    "dimension": dim,
+                    "dimension_cn": dim_cn_map[dim],
+                    "score": round(dim_avg[dim], 2),
+                    "is_weak": dim in weak_dims,
+                    "search_query": query,
+                    "references": refs,
+                }
+            else:
+                evidence_by_dim[dim] = {
+                    "dimension": dim,
+                    "dimension_cn": dim_cn_map[dim],
+                    "score": round(dim_avg[dim], 2),
+                    "is_weak": dim in weak_dims,
+                    "search_query": query,
+                    "references": [],
+                    "error": ev_result.get("error", "无相关文献"),
+                }
+
+        evidence_suggestions = []
+        for dim in target_dims:
+            info = evidence_by_dim.get(dim)
+            if not info or not info["references"]:
+                continue
+            dim_name = dim_cn_map[dim]
+            score = info["score"]
+            refs = info["references"]
+
+            if dim == "completeness":
+                suggestion = (
+                    f"{dim_name}得分 {score:.1f} 分，建议补充缺失字段。"
+                    f"参考 {refs[0]['ref_index']} 号研究"
+                )
+                if len(refs) > 1:
+                    suggestion += f"（对比 {refs[1]['ref_index']} 号研究的方法）"
+                suggestion += "，重点关注关键字段如诊断结果、用药记录的完整性。"
+            elif dim == "accuracy":
+                suggestion = (
+                    f"{dim_name}得分 {score:.1f} 分，建议加强数据校验机制。"
+                    f"基于 {refs[0]['ref_index']} 号研究提出的质量控制框架"
+                )
+                if len(refs) > 1:
+                    suggestion += f"，结合 {refs[1]['ref_index']} 号研究的交叉验证方法"
+                suggestion += "，引入二级审核和逻辑一致性检查。"
+            elif dim == "timeliness":
+                suggestion = (
+                    f"{dim_name}得分 {score:.1f} 分，建议优化数据更新流程。"
+                    f"参考 {refs[0]['ref_index']} 号研究的实时数据管理方案"
+                )
+                if len(refs) > 1:
+                    suggestion += f"以及 {refs[1]['ref_index']} 号研究的经验"
+                suggestion += "，缩短采集到入库的时间周期。"
+            elif dim == "compliance":
+                suggestion = (
+                    f"{dim_name}得分 {score:.1f} 分，存在合规风险。"
+                    f"根据 {refs[0]['ref_index']} 号研究的隐私保护框架"
+                )
+                if len(refs) > 1:
+                    suggestion += f"及 {refs[1]['ref_index']} 号研究的合规实践"
+                suggestion += "，建议完善知情同意书管理和脱敏处理流程。"
+            else:
+                suggestion = f"{dim_name}需改进。"
+
+            evidence_suggestions.append({
+                "dimension": dim,
+                "dimension_cn": dim_name,
+                "score": round(score, 2),
+                "suggestion": suggestion,
+                "reference_indices": [r["ref_index"] for r in refs],
+            })
+
+        dept_stats = {}
+        for r in assessment["details"]:
+            d = r["department"]
+            if d not in dept_stats:
+                dept_stats[d] = {
+                    "name_cn": r["department_cn"],
+                    "count": 0,
+                    "scores": [],
+                    "levels": {},
+                }
+            dept_stats[d]["count"] += 1
+            dept_stats[d]["scores"].append(r["quality_score"])
+            lvl = r["quality_level"]
+            dept_stats[d]["levels"][lvl] = dept_stats[d]["levels"].get(lvl, 0) + 1
+
+        for d, s in dept_stats.items():
+            s["avg_score"] = round(sum(s["scores"]) / len(s["scores"]), 2)
+            del s["scores"]
+
+        dim_analysis = {}
+        for dim in self.QUALITY_DIMENSIONS:
+            scores = [r["dimension_scores"][dim] for r in assessment["details"]]
+            dim_analysis[dim] = {
+                "min": round(min(scores), 2),
+                "max": round(max(scores), 2),
+                "avg": round(sum(scores) / len(scores), 2),
+                "weak": min(scores) < 75,
+            }
+
+        return {
+            "tool": "generate_evidence_based_report",
+            "dataset_name": dataset_name,
+            "report_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "summary": {
+                "total_records": assessment["total_records"],
+                "average_quality": assessment["average_quality_score"],
+                "overall_level": self._grade_level(assessment["average_quality_score"]),
+                "level_distribution": assessment["level_distribution"],
+                "primary_department": primary_dept,
+                "primary_department_cn": dept_cn,
+                "weak_dimensions": [dim_cn_map[d] for d in weak_dims],
+            },
+            "department_analysis": dept_stats,
+            "dimension_analysis": dim_analysis,
+            "evidence_by_dimension": evidence_by_dim,
+            "evidence_suggestions": evidence_suggestions,
+            "all_references": all_evidences,
+            "total_references": len(all_evidences),
+            "evidence_source": source,
+            "details": assessment["details"],
+        }
+
+    # ============================================================
     # 内部辅助方法
     # ============================================================
     def _infer_department(self, record: Dict) -> str:
@@ -774,6 +1136,21 @@ class MedicalDataQAMCPServer:
                     "required": ["records"],
                 },
             },
+            {
+                "name": "generate_evidence_based_report",
+                "description": "生成带循证医学文献引用的质量报告：自动识别薄弱维度，每个维度检索对应文献，生成带引用的改进建议",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "records": {"type": "array", "items": {"type": "object"}, "description": "医疗数据记录列表"},
+                        "dataset_name": {"type": "string", "description": "数据集名称", "default": "未命名数据集"},
+                        "department": {"type": "string", "description": "指定科室（可选）"},
+                        "evidence_per_dimension": {"type": "integer", "description": "每个维度引用文献数", "default": 2},
+                        "source": {"type": "string", "description": "文献数据源", "default": "paper_en"},
+                    },
+                    "required": ["records"],
+                },
+            },
         ]
 
     def call_tool(self, name: str, arguments: Dict) -> Any:
@@ -792,6 +1169,8 @@ class MedicalDataQAMCPServer:
             return self.search_medical_evidence(**arguments)
         elif name == "assess_with_evidence":
             return self.assess_with_evidence(**arguments)
+        elif name == "generate_evidence_based_report":
+            return self.generate_evidence_based_report(**arguments)
         else:
             return {"error": f"未知工具: {name}"}
 

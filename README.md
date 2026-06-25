@@ -1,6 +1,6 @@
 # 医疗数据质量评估 MCP Tool
 
-> **小X宝医疗黑客松 2026 参赛作品** — 基于 Model Context Protocol 的医疗数据质量评估工具
+> **小X宝医疗黑客松 2026 参赛作品** — 基于 Model Context Protocol 的医疗数据质量评估 + 循证医学工具
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![FastMCP](https://img.shields.io/badge/FastMCP-3.4+-green.svg)](https://github.com/jlowin/fastmcp)
@@ -11,15 +11,18 @@
 
 ## 📖 项目简介
 
-**医疗数据质量评估 MCP Tool** 是一个基于 Model Context Protocol (MCP) 标准的医疗数据质量评估服务，为医疗 AI 模型训练、数据资产入表、合规审计等场景提供端到端的数据质量评估能力。
+**医疗数据质量评估 MCP Tool** 是一个基于 Model Context Protocol (MCP) 标准的医疗数据质量评估 + 循证医学服务，为医疗 AI 模型训练、数据资产入表、合规审计等场景提供端到端的数据质量评估能力。
 
 ### 核心价值
 
 - 🔍 **真实数据接入**: 5,000,000 条北数所合规医疗 Token 数据
 - ⚡ **毫秒级响应**: 50,000 条分层采样 + Parquet 缓存
-- 🎯 **7 大 MCP 工具**: 覆盖数据质量评估全流程
+- 🎯 **8 大 MCP 工具**: 覆盖数据质量评估全流程
 - 🏥 **8 大科室分类**: 放射科/病理科/神经内科/心血管科/检验科/骨科/儿科/急诊科
 - 📊 **4 维度评分**: 完整性 + 准确性 + 时效性 + 合规性
+- 📚 **循证医学集成**: KnowS 医学文献检索 + 循证质量报告
+- 🤖 **文献驱动分类**: 基于 480 篇医学文献训练的 TF-IDF + LR 科室分类模型
+- 🖥️ **Gradio Web UI**: 可视化界面，支持 ModelScope Studio 部署
 
 ---
 
@@ -30,9 +33,11 @@
 | `get_dataset_stats` | 获取真实数据集统计信息 | 无 | 数据集规模/等级分布/科室分布 |
 | `sample_real_records` | 采样真实数据记录 | department, n | 真实 Token 记录列表 |
 | `assess_data_quality` | 评估医疗数据质量 | records, department | 4 维度评分 + A/B/C/D 等级 |
-| `classify_department` | 自动科室分类 | record | 科室 + 置信度 |
+| `classify_department` | 自动科室分类（ML+规则双引擎） | record | 科室 + 置信度 + 关键词解释 |
 | `grade_data_level` | 数据等级评定 | quality_score | A/B/C/D 等级 |
 | `generate_quality_report` | 生成完整质量报告 | records | Markdown 报告 |
+| `search_medical_evidence` | 循证医学文献检索（KnowS） | query, source | 中英文文献 + 临床指南 |
+| `generate_evidence_based_report` | 生成带循证引用的质量报告 | records, department | 质量报告 + 文献引用 + 改进建议 |
 | `search_similar_data` | 检索相似数据 | record, top_k | 相似记录 + 相似度 |
 
 ---
@@ -43,7 +48,7 @@
 
 - Python 3.10+
 - FastMCP 3.4+
-- Pandas, NumPy, PyArrow
+- Pandas, NumPy, PyArrow, scikit-learn
 
 ### 安装
 
@@ -53,13 +58,29 @@ cd -MCP-Tool-Medical-Data-QA-MCP-
 pip install -r requirements.txt
 ```
 
+### 配置环境变量
+
+复制 `.env.example` 为 `.env` 并填入：
+
+```env
+KNOWS_API_KEY=sk-knows-xxx          # KnowS 循证医学 API Key
+```
+
 ### 启动 MCP Server
 
 ```bash
-python server.py
+python mcp_server.py
 ```
 
 Server 将通过 stdio 协议启动，等待 MCP 客户端连接。
+
+### 启动 Gradio Web 界面
+
+```bash
+python app.py
+```
+
+访问 `http://localhost:7860` 打开 Web 界面。
 
 ---
 
@@ -74,7 +95,7 @@ Server 将通过 stdio 协议启动，等待 MCP 客户端连接。
   "mcpServers": {
     "medical-data-qa": {
       "command": "python",
-      "args": ["e:/各种PY程序/18-医疗AI模型系统/server.py"]
+      "args": ["e:/各种PY程序/18-医疗AI模型系统/mcp_server.py"]
     }
   }
 }
@@ -89,7 +110,7 @@ Server 将通过 stdio 协议启动，等待 MCP 客户端连接。
   "mcpServers": {
     "medical-data-qa": {
       "command": "python",
-      "args": ["./server.py"],
+      "args": ["./mcp_server.py"],
       "cwd": "./18-医疗AI模型系统"
     }
   }
@@ -99,6 +120,37 @@ Server 将通过 stdio 协议启动，等待 MCP 客户端连接。
 ### ModelScope MCP 广场
 
 已在 ModelScope MCP 广场上线，可直接订阅使用。
+
+**地址**: https://modelscope.cn/mcp/servers/yuppiez/leo
+
+---
+
+## 📚 循证医学集成（KnowS）
+
+### 功能特点
+
+- **多源检索**: 支持英文论文、中文论文、临床指南
+- **智能关联**: 自动识别数据质量薄弱维度，检索相关医学文献
+- **循证报告**: 质量报告自动附带文献引用和改进建议
+- **文献驱动**: 科室分类模型基于真实医学文献训练
+
+### 支持的数据源
+
+| 数据源 | 标识 | 说明 |
+|--------|------|------|
+| 英文论文 | `paper_en` | PubMed / PMC 英文文献 |
+| 中文论文 | `paper_cn` | 中文医学期刊论文 |
+| 临床指南 | `guide` | 国内外临床诊疗指南 |
+
+### 训练科室分类模型
+
+```bash
+python scripts/train_department_classifier.py
+```
+
+从 KnowS API 检索 8 个科室各 60 篇文献（共 480 篇），训练 TF-IDF + Logistic Regression 分类模型。
+
+**模型性能**: 测试准确率 **80.0%**（8/10 测试用例）
 
 ---
 
@@ -130,12 +182,36 @@ result = assess_data_quality(records, department="radiology")
 # 返回: 综合评分 97.6 / A级 / 4维度明细
 ```
 
-### 3. 检索相似数据
+### 3. 循证医学文献检索
 
 ```python
-record = {"category": "radiology", "data_type": "ct_image", "data_quality_score": 98.5}
-result = search_similar_data(record, top_k=5)
-# 返回: 5条最相似的真实Token记录 + 相似度分数
+result = search_medical_evidence(
+    query="CT影像质量控制",
+    source="paper_cn"
+)
+# 返回: 相关中文文献列表 + 标题 + 摘要 + 来源
+```
+
+### 4. 生成带循证引用的质量报告
+
+```python
+result = generate_evidence_based_report(
+    records=records,
+    department="radiology"
+)
+# 返回: 质量报告 + 薄弱维度改进建议 + 文献引用
+```
+
+### 5. 文献驱动科室分类
+
+```python
+record = {
+    "text": "CT scan of brain showing acute ischemic stroke",
+    "data_type": "image"
+}
+result = classify_department(record)
+# 返回: 放射科 / 置信度 24.65% / 关键词: ct, brain tumor, brain
+# classification_method: ml_model (优先ML，回退规则)
 ```
 
 ---
@@ -196,22 +272,38 @@ result = search_similar_data(record, top_k=5)
 
 ---
 
+## 🤖 文献驱动科室分类
+
+### 双引擎架构
+
+```
+输入文本
+    ↓
+┌─────────────┐    文本充足?    ┌──────────────┐
+│  ML 模型    │─────是──────→│ TF-IDF + LR  │
+│  (优先)     │              │  8科室分类   │
+└─────────────┘              └──────────────┘
+       ↓否
+┌─────────────┐
+│  规则引擎    │
+│  (回退)      │
+└─────────────┘
+```
+
+### 模型特点
+
+- **训练数据**: KnowS API 检索 480 篇医学文献（8科室 × 60篇）
+- **模型算法**: TF-IDF 特征 + Logistic Regression
+- **置信度输出**: 概率分布 + Top 3 备选科室
+- **可解释性**: Top 5 关键词解释分类依据
+- **优雅降级**: 文本不足时自动回退到规则引擎
+
+---
+
 ## 🧪 测试
 
 ```bash
 python test_real_data.py
-```
-
-**测试结果**: 7/7 全部通过 ✅
-
-```
-[测试1] get_dataset_stats      ✅ 5,000,000条 / 50,000采样
-[测试2] sample_real_records    ✅ 真实token_id: 68D3B03359CA4B7F
-[测试3] search_similar_data    ✅ 相似度0.999
-[测试4] assess_data_quality    ✅ 3条记录评估正确
-[测试5] classify_department    ✅ 置信度0.98
-[测试6] grade_data_level       ✅ A/B/C/D等级正确
-[测试7] generate_quality_report ✅ 完整报告生成
 ```
 
 ---
@@ -220,15 +312,17 @@ python test_real_data.py
 
 ```
 18-医疗AI模型系统/
-├── server.py                    # MCP Server 入口 (FastMCP + stdio)
-├── mcp_server.py                # MCP 核心逻辑
-├── app.py                       # Gradio Web 界面
-├── modelscope.json              # ModelScope 部署配置
-├── config.yaml                  # 全局配置
-├── requirements.txt             # Python 依赖
-├── test_real_data.py            # 集成测试
+├── mcp_server.py               # MCP Server 入口 (FastMCP + stdio)
+├── app.py                       # Gradio Web 界面 (8个Tab)
+├── modelscope.json               # ModelScope 部署配置
+├── config.yaml                 # 全局配置
+├── requirements.txt            # Python 依赖
+├── test_real_data.py           # 集成测试
+├── .env                        # 环境变量 (KNOWS_API_KEY 等)
+├── scripts/
+│   └── train_department_classifier.py  # 文献驱动科室分类模型训练
 ├── data/
-│   └── loader.py                # 真实数据加载器 (分层采样+Parquet)
+│   └── loader.py               # 真实数据加载器 (分层采样+Parquet)
 ├── models/
 │   └── classifier.py            # 多任务学习分类器
 ├── modules/
@@ -237,9 +331,11 @@ python test_real_data.py
 │   └── ...
 ├── api/
 │   └── healthcare_ai_extension.py
+├── knows-evidence-search/       # KnowS 循证医学检索工具
 └── outputs/                     # 运行时生成 (git忽略)
     ├── data_sample.parquet      # 50,000条采样缓存
-    └── data_stats.json           # 统计信息
+    ├── data_stats.json          # 统计信息
+    └── department_classifier.pkl  # 科室分类模型
 ```
 
 ---
@@ -251,6 +347,8 @@ python test_real_data.py
 3. **合规审计溯源** — 通过 token_id 实现全链路追踪
 4. **多模态医学研究** — 跨科室 Token 聚合分析
 5. **北数所数据产品登记** — 符合数据资产登记规范
+6. **循证医学辅助** — 质量改进建议附带医学文献支持
+7. **科室自动分类** — 基于文本内容智能识别数据所属科室
 
 ---
 
@@ -280,4 +378,4 @@ MIT License - 详见 [LICENSE](LICENSE)
 ## 📞 联系
 
 - GitHub: [@yuppiez99999](https://github.com/yuppiez99999)
-- ModelScope: [医疗数据质量评估 MCP Tool](https://modelscope.cn/mcp/servers/create)
+- ModelScope MCP: [医疗数据质量评估 MCP Tool](https://modelscope.cn/mcp/servers/yuppiez/leo)
