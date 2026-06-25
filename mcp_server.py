@@ -21,6 +21,12 @@ import sys
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
 # ============================================================
 # MCP Server 框架（轻量实现，无需第三方MCP依赖）
 # ============================================================
@@ -59,9 +65,21 @@ class MedicalDataQAMCPServer:
         "compliance",     # 合规性
     ]
 
+    # KnowS 医学循证 API 配置
+    KNOWS_BASE_URL = "https://api.nullht.com/v1"
+    KNOWS_SOURCES = {
+        "paper_en":       {"label": "英文论文", "endpoint": "/evidences/ai_search_paper_en", "max": 40},
+        "paper_cn":       {"label": "中文论文", "endpoint": "/evidences/ai_search_paper_cn", "max": 40},
+        "meeting":        {"label": "会议论文", "endpoint": "/evidences/ai_search_meeting", "max": 5},
+        "guide":          {"label": "临床指南", "endpoint": "/evidences/ai_search_guide", "max": 5},
+        "trial":          {"label": "临床试验", "endpoint": "/evidences/ai_search_trial", "max": 5},
+        "package_insert": {"label": "药品说明书", "endpoint": "/evidences/ai_search_package_insert", "max": 5},
+    }
+
     def __init__(self):
-        self.version = "1.0.0"
+        self.version = "1.1.0"
         self.name = "medical-data-qa-mcp"
+        self.knows_api_key = os.environ.get("KNOWS_API_KEY", "")
 
     # ============================================================
     # Tool 1: assess_data_quality — 评估医疗数据质量
@@ -349,6 +367,193 @@ class MedicalDataQAMCPServer:
         }
 
     # ============================================================
+    # Tool 6: search_medical_evidence — KnowS 医学循证检索
+    # ============================================================
+    def search_medical_evidence(
+        self,
+        query: str,
+        source: str = "paper_en",
+        max_results: int = 10,
+    ) -> Dict[str, Any]:
+        """检索医学循证证据（KnowS API）
+
+        Args:
+            query: 检索关键词（支持中英文）
+            source: 数据源 (paper_en/paper_cn/meeting/guide/trial/package_insert)
+            max_results: 返回结果数量（不超过数据源最大值）
+
+        Returns:
+            检索结果，包含文献列表、元数据、分页信息
+        """
+        if not query or not query.strip():
+            return {"error": "检索关键词不能为空"}
+
+        if source not in self.KNOWS_SOURCES:
+            return {
+                "error": f"不支持的数据源: {source}",
+                "available_sources": list(self.KNOWS_SOURCES.keys()),
+            }
+
+        if not HAS_REQUESTS:
+            return {"error": "requests 库未安装，请先安装: pip install requests"}
+
+        if not self.knows_api_key:
+            return {
+                "error": "KNOWS_API_KEY 未配置",
+                "hint": "请设置环境变量 KNOWS_API_KEY 或在初始化时传入 api_key",
+            }
+
+        source_info = self.KNOWS_SOURCES[source]
+        endpoint = source_info["endpoint"]
+        url = f"{self.KNOWS_BASE_URL.rstrip('/')}{endpoint}"
+        limit = min(max_results, source_info["max"])
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.knows_api_key}",
+        }
+        payload = {"query": query}
+
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.exceptions.Timeout:
+            return {"error": "KnowS API 请求超时，请稍后重试"}
+        except requests.exceptions.HTTPError as e:
+            return {"error": f"KnowS API 请求失败: HTTP {resp.status_code}", "details": str(e)}
+        except requests.exceptions.RequestException as e:
+            return {"error": f"网络请求异常: {e}"}
+        except Exception as e:
+            return {"error": f"解析响应失败: {e}"}
+
+        evidences = data.get("evidences", [])
+        question_id = data.get("question_id", "")
+
+        formatted = []
+        for ev in evidences[:limit]:
+            formatted.append({
+                "id": ev.get("id", ""),
+                "title": ev.get("title", ""),
+                "abstract": ev.get("abstract", ""),
+                "journal": ev.get("journal", ""),
+                "publish_date": ev.get("publish_date", ""),
+                "authors": ev.get("authors", []),
+                "doi": ev.get("doi", ""),
+                "study_type": ev.get("study_type", ""),
+                "impact_factor": ev.get("impact_factor", ""),
+                "has_pdf": ev.get("has_pdf", False),
+                "cas_division": ev.get("cas_journal_division", ""),
+                "wos_quartile": ev.get("wos_jif_quartile", ""),
+            })
+
+        return {
+            "tool": "search_medical_evidence",
+            "source": source,
+            "source_label": source_info["label"],
+            "query": query,
+            "question_id": question_id,
+            "total_found": len(evidences),
+            "returned": len(formatted),
+            "evidences": formatted,
+            "searched_at": datetime.now().isoformat(),
+        }
+
+    # ============================================================
+    # Tool 7: assess_with_evidence — 质量评估 + 文献检索联动
+    # ============================================================
+    def assess_with_evidence(
+        self,
+        records: List[Dict[str, Any]],
+        query: str = "",
+        source: str = "paper_en",
+        department: Optional[str] = None,
+        evidence_count: int = 5,
+    ) -> Dict[str, Any]:
+        """评估数据质量并联动检索相关医学文献
+
+        评估完成后，自动根据科室和数据类型生成检索词，
+        检索相关领域最新文献，为数据质量改进提供循证依据。
+
+        Args:
+            records: 医疗数据记录列表
+            query: 自定义检索词（可选，不填则自动生成）
+            source: 文献数据源
+            department: 指定科室（可选）
+            evidence_count: 返回文献数量
+
+        Returns:
+            质量评估结果 + 相关医学循证文献
+        """
+        if not records:
+            return {"error": "记录列表不能为空"}
+
+        assessment = self.assess_data_quality(records, department)
+        if "error" in assessment:
+            return assessment
+
+        avg_score = assessment["average_quality_score"]
+        primary_dept = ""
+        max_count = 0
+        for dept, cnt in assessment["department_distribution"].items():
+            if cnt > max_count:
+                max_count = cnt
+                primary_dept = dept
+
+        dept_cn = self.DEPARTMENTS.get(primary_dept, {}).get("name_cn", "")
+
+        if not query.strip():
+            quality_concern = ""
+            if avg_score < 75:
+                quality_concern = "数据质量改进 医疗数据治理"
+            elif avg_score < 90:
+                quality_concern = "医疗数据质量管理"
+            else:
+                quality_concern = "高质量医疗数据 AI训练"
+
+            if dept_cn:
+                query = f"{dept_cn} {quality_concern}"
+            else:
+                query = f"医疗数据质量 {quality_concern}"
+
+        evidence_result = self.search_medical_evidence(query, source, evidence_count)
+
+        weak_dims = []
+        dim_cn = {
+            "completeness": "完整性",
+            "accuracy": "准确性",
+            "timeliness": "时效性",
+            "compliance": "合规性",
+        }
+        dim_scores = {}
+        for dim in self.QUALITY_DIMENSIONS:
+            scores = [r["dimension_scores"][dim] for r in assessment["details"]]
+            dim_scores[dim] = sum(scores) / len(scores)
+            if dim_scores[dim] < 75:
+                weak_dims.append(dim_cn[dim])
+
+        evidence_relation = {
+            "primary_department": primary_dept,
+            "department_cn": dept_cn,
+            "average_quality_score": round(avg_score, 2),
+            "weak_dimensions": weak_dims,
+            "auto_generated_query": not query.strip() or query != query,
+            "search_query_used": query,
+            "purpose": (
+                f"为{dept_cn + ' ' if dept_cn else ''}数据质量改进提供循证医学依据，"
+                f"重点关注{'、'.join(weak_dims) if weak_dims else '全维度质量提升'}"
+            ),
+        }
+
+        return {
+            "tool": "assess_with_evidence",
+            "quality_assessment": assessment,
+            "evidence_search": evidence_result,
+            "evidence_relation": evidence_relation,
+            "assessed_at": datetime.now().isoformat(),
+        }
+
+    # ============================================================
     # 内部辅助方法
     # ============================================================
     def _infer_department(self, record: Dict) -> str:
@@ -537,6 +742,38 @@ class MedicalDataQAMCPServer:
                     "required": ["quality_profile"],
                 },
             },
+            {
+                "name": "search_medical_evidence",
+                "description": "KnowS医学循证检索：检索英文/中文论文、指南、临床试验、药品说明书等医学证据",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "检索关键词（支持中英文）"},
+                        "source": {
+                            "type": "string",
+                            "description": "数据源：paper_en/paper_cn/meeting/guide/trial/package_insert",
+                            "default": "paper_en",
+                        },
+                        "max_results": {"type": "integer", "description": "返回结果数", "default": 10},
+                    },
+                    "required": ["query"],
+                },
+            },
+            {
+                "name": "assess_with_evidence",
+                "description": "质量评估+文献检索联动：评估数据质量后自动检索相关医学循证文献，提供改进依据",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "records": {"type": "array", "items": {"type": "object"}, "description": "医疗数据记录列表"},
+                        "query": {"type": "string", "description": "自定义检索词（可选，自动生成）"},
+                        "source": {"type": "string", "description": "文献数据源", "default": "paper_en"},
+                        "department": {"type": "string", "description": "指定科室（可选）"},
+                        "evidence_count": {"type": "integer", "description": "返回文献数", "default": 5},
+                    },
+                    "required": ["records"],
+                },
+            },
         ]
 
     def call_tool(self, name: str, arguments: Dict) -> Any:
@@ -551,6 +788,10 @@ class MedicalDataQAMCPServer:
             return self.generate_quality_report(**arguments)
         elif name == "search_similar_data":
             return self.search_similar_data(**arguments)
+        elif name == "search_medical_evidence":
+            return self.search_medical_evidence(**arguments)
+        elif name == "assess_with_evidence":
+            return self.assess_with_evidence(**arguments)
         else:
             return {"error": f"未知工具: {name}"}
 

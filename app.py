@@ -67,6 +67,50 @@ def ui_generate_report(input_json: str, dataset_name: str):
         return f"错误: {e}"
 
 
+def ui_search_evidence(query: str, source: str, max_results: int):
+    """医学循证检索界面回调"""
+    try:
+        if not query.strip():
+            return "错误: 请输入检索关键词"
+        source_map = {
+            "英文论文": "paper_en",
+            "中文论文": "paper_cn",
+            "会议论文": "meeting",
+            "临床指南": "guide",
+            "临床试验": "trial",
+            "药品说明书": "package_insert",
+        }
+        src = source_map.get(source, "paper_en")
+        result = server.search_medical_evidence(query, src, max_results)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return f"错误: {e}"
+
+
+def ui_assess_with_evidence(input_json: str, query: str, source: str, evidence_count: int, department: str):
+    """质量评估+文献检索联动界面回调"""
+    try:
+        records = json.loads(input_json) if isinstance(input_json, str) else input_json
+        if not isinstance(records, list):
+            return "错误: 请输入JSON数组格式"
+        source_map = {
+            "英文论文": "paper_en",
+            "中文论文": "paper_cn",
+            "会议论文": "meeting",
+            "临床指南": "guide",
+            "临床试验": "trial",
+            "药品说明书": "package_insert",
+        }
+        src = source_map.get(source, "paper_en")
+        dept = department if department != "自动检测" else None
+        result = server.assess_with_evidence(records, query, src, dept, evidence_count)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError as e:
+        return f"JSON解析错误: {e}"
+    except Exception as e:
+        return f"错误: {e}"
+
+
 # ============================================================
 # 示例数据
 # ============================================================
@@ -97,11 +141,11 @@ def create_ui():
         gr.Markdown("""
         # 🏥 医疗数据质量评估 MCP Tool
 
-        > 小X宝医疗黑客松参赛作品 | 基于390万条医疗Token数据
+        > 小X宝医疗黑客松参赛作品 | 基于390万条医疗Token数据 | KnowS医学循证检索
 
-        **功能**: 评估医疗数据质量、自动科室分类、数据等级评定、生成质量报告
+        **功能**: 评估医疗数据质量、自动科室分类、数据等级评定、生成质量报告、医学循证文献检索
 
-        **MCP工具**: 可被任何AI Agent调用，支持ModelScope部署
+        **MCP工具**: 7个工具可被任何AI Agent调用，支持ModelScope部署
         """)
 
         with gr.Tab("📊 质量评估"):
@@ -153,6 +197,55 @@ def create_ui():
                 with gr.Column():
                     output4 = gr.Textbox(label="质量报告", lines=25)
             btn4.click(ui_generate_report, [report_input, ds_name], [output4])
+
+        with gr.Tab("📚 医学循证检索"):
+            with gr.Row():
+                with gr.Column():
+                    ev_search_query = gr.Textbox(
+                        label="检索关键词",
+                        value="MDS NPM1 mutation",
+                        placeholder="输入疾病名、基因、药物等医学关键词",
+                        lines=2,
+                    )
+                    with gr.Row():
+                        ev_search_source = gr.Dropdown(
+                            ["英文论文", "中文论文", "会议论文", "临床指南", "临床试验", "药品说明书"],
+                            value="英文论文", label="数据源",
+                        )
+                        ev_search_max = gr.Slider(1, 40, value=10, step=1, label="返回数量")
+                    btn5 = gr.Button("🔍 检索文献", variant="primary")
+                with gr.Column():
+                    output5 = gr.Textbox(label="检索结果", lines=20)
+            btn5.click(ui_search_evidence, [ev_search_query, ev_search_source, ev_search_max], [output5])
+
+        with gr.Tab("🔗 质量+文献联动"):
+            with gr.Row():
+                with gr.Column():
+                    ev_dept = gr.Dropdown(
+                        ["自动检测", "放射科", "病理科", "神经内科", "心血管科",
+                         "检验科", "骨科", "儿科", "急诊科"],
+                        value="自动检测", label="指定科室（可选）",
+                    )
+                    ev_input = gr.Textbox(
+                        label="医疗数据记录 (JSON数组)",
+                        value=SAMPLE_RECORDS, lines=8,
+                    )
+                    ev_query = gr.Textbox(
+                        label="检索词（留空自动生成）",
+                        value="", placeholder="不填则根据科室和质量自动生成",
+                    )
+                    with gr.Row():
+                        ev_source = gr.Dropdown(
+                            ["英文论文", "中文论文", "会议论文", "临床指南", "临床试验", "药品说明书"],
+                            value="英文论文", label="文献数据源",
+                        )
+                        ev_count = gr.Slider(1, 20, value=5, step=1, label="返回文献数")
+                    btn6 = gr.Button("🔍 评估+检索文献", variant="primary")
+                with gr.Column():
+                    output6 = gr.Textbox(label="评估+文献结果", lines=25)
+            btn6.click(ui_assess_with_evidence,
+                       [ev_input, ev_query, ev_source, ev_count, ev_dept],
+                       [output6])
 
         with gr.Tab("🔧 MCP工具列表"):
             tools = server.list_tools()
