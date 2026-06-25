@@ -49,7 +49,7 @@
 ### 魔搭展示链接
 
 - **MCP 工具**: [https://modelscope.cn/mcp/servers/yuppiez/leo](https://modelscope.cn/mcp/servers/yuppiez/leo)
-- **Gradio Studio**: （待部署）
+- **Gradio Studio**: （部署中，详见 [DEPLOYMENT.md](DEPLOYMENT.md)）
 
 ### 本地运行步骤
 
@@ -258,11 +258,26 @@ search_medical_evidence(
 | 指标 | 数值 | 说明 |
 |------|------|------|
 | 训练样本 | 480 篇 | 8 科室 × 60 篇/科室（KnowS 英文文献） |
-| 测试样本 | 10 条 | 手工标注测试用例 |
-| 测试准确率 | 80.0% | 8/10 分类正确 |
+| 测试样本 | 58 条 | 手工标注测试用例（8科室全覆盖） |
+| 测试准确率 | **72.4%** | 42/58 分类正确 |
 | 交叉验证准确率 | 32.5% ± 3.8% | 5 折 StratifiedKFold（8 分类随机基准 12.5%） |
 | 模型大小 | ~500 KB | TF-IDF + Logistic Regression |
 | 推理速度 | < 10ms | 单条记录分类 |
+
+#### 各科室准确率
+
+| 科室 | 正确/总数 | 准确率 |
+|------|----------|--------|
+| 心血管科 | 7/8 | 87.5% |
+| 急诊科 | 5/6 | 83.3% |
+| 骨科 | 5/6 | 83.3% |
+| 病理科 | 6/8 | 75.0% |
+| 儿科 | 4/6 | 66.7% |
+| 检验科 | 5/8 | 62.5% |
+| 神经内科 | 5/8 | 62.5% |
+| 放射科 | 5/8 | 62.5% |
+
+> 运行评测：`python scripts/evaluate_department_classifier.py`
 
 ### MCP 工具可用性
 

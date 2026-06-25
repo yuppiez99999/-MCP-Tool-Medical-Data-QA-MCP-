@@ -1,16 +1,37 @@
 {
   "name": "medical-data-qa-mcp",
   "display_name": "医疗数据质量评估 MCP Tool",
-  "description": "基于390万条医疗Token数据的智能质量评估工具。支持医疗数据质量评分、8大科室自动分类、数据等级评定(A/B/C/D级)、完整质量报告生成。可被任何AI Agent调用。",
-  "version": "1.0.0",
+  "description": "基于医疗Token数据的智能质量评估+循证医学工具。支持4维度质量评分、8大科室ML自动分类、循证文献检索、带引用的质量报告生成。可被任何AI Agent调用。",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "小X宝医疗黑客松参赛团队",
-  "tags": ["医疗", "数据质量", "MCP", "Agent Skill", "AI辅助"],
+  "tags": ["医疗", "数据质量", "MCP", "Agent Skill", "循证医学", "科室分类", "AI辅助"],
   "category": "healthcare",
   "tools": [
     {
+      "name": "get_dataset_stats",
+      "description": "获取真实医疗数据集统计信息（规模、等级分布、科室分布）",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "sample_real_records",
+      "description": "采样真实医疗Token数据记录",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "department": {"type": "string", "description": "科室名称"},
+          "n": {"type": "integer", "description": "采样数量", "default": 5}
+        },
+        "required": []
+      }
+    },
+    {
       "name": "assess_data_quality",
-      "description": "评估医疗数据质量：完整性、准确性、合规性、时效性",
+      "description": "评估医疗数据质量：完整性、准确性、时效性、合规性4维度评分",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -22,7 +43,7 @@
     },
     {
       "name": "classify_department",
-      "description": "自动识别医疗数据所属科室（8大科室多分类）",
+      "description": "自动识别医疗数据所属科室（8大科室，ML文献驱动模型+规则双引擎）",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -50,6 +71,34 @@
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}},
           "dataset_name": {"type": "string"}
+        },
+        "required": ["records"]
+      }
+    },
+    {
+      "name": "search_medical_evidence",
+      "description": "循证医学文献检索（支持中英文论文、临床指南、临床试验等）",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "检索关键词"},
+          "source": {"type": "string", "description": "数据源: paper_en/paper_cn/guide/clinical_trial/drug_label"},
+          "max_results": {"type": "integer", "description": "返回数量", "default": 10}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "generate_evidence_based_report",
+      "description": "生成带循证医学文献引用的质量报告（自动识别薄弱维度+文献支撑改进建议）",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "records": {"type": "array", "items": {"type": "object"}},
+          "department": {"type": "string"},
+          "dataset_name": {"type": "string"},
+          "evidence_source": {"type": "string", "description": "文献数据源"},
+          "papers_per_dimension": {"type": "integer", "description": "每个维度文献数", "default": 2}
         },
         "required": ["records"]
       }
