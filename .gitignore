@@ -52,8 +52,10 @@ outputs/*.db
 outputs/healthcare_token_classifier.pt
 outputs/models/*.pt
 outputs/models/*.pth
+outputs/*.pkl
 *.pt
 *.pth
+*.pkl
 
 # 大数据文件（CSV原始数据，不纳入）
 outputs/valuation_detail*.csv
