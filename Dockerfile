@@ -5,10 +5,11 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# 安装系统依赖
+# 安装系统依赖 (gradio + pandas + sklearn 编译/运行所需)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    gcc \
+    gcc g++ make \
+    libffi-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件并安装
