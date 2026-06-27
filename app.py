@@ -357,4 +357,5 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
+        mcp_server=True,  # ModelScope MCP 托管部署必需
     )
