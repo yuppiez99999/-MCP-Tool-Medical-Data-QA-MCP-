@@ -7,7 +7,7 @@
 功能：
   1. assess_data_quality   — 评估医疗数据质量（完整性/准确性/合规性/时效性）
   2. classify_department   — 自动识别医疗科室（8大科室多分类）
-  3. grade_data_level      — 数据等级评定（A/B/C级）
+  3. grade_data_level      — 数据等级评定（A/B/C/D级）
   4. generate_quality_report — 生成完整质量报告+改进建议
   5. search_similar_data   — 检索相似质量画像的历史数据
   6. search_medical_evidence — KnowS医学循证检索（论文/指南/试验）
@@ -17,12 +17,30 @@
 数据基础：390万条医疗健康Token数据，覆盖8大科室
 部署目标：ModelScope MCP Server / Space
 开源协议：MIT
+
+===== 医疗合规性声明 =====
+本工具仅用于医疗数据质量评估和医学文献检索辅助，不提供任何医疗诊断建议。
+本工具的输出不能替代专业医生的诊断和治疗意见，任何医疗决策应由执业医师做出。
+本工具使用脱敏 Token 化数据进行演示，不包含任何真实患者隐私信息。
+循证医学文献检索结果仅供参考，文献的适用性需由专业医疗人员判断。
+使用本工具产生的任何后果，开发者不承担任何法律责任。
+===========================
 """
 import json
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# 加载 .env 文件中的环境变量（必须在 os.environ 访问前执行）
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent / ".env"
+    if _env_path.exists():
+        load_dotenv(_env_path)
+except ImportError:
+    pass
 
 try:
     import requests
@@ -69,6 +87,14 @@ class MedicalDataQAMCPServer:
     ]
 
     # KnowS 医学循证 API 配置
+    # 科室名称别名映射（统一ML模型输出与系统内部键名）
+    DEPARTMENT_ALIASES = {
+        "cardiovascular": "cardiology",
+        "emergency_medicine": "emergency",
+        "laboratory_medicine": "laboratory",
+        "orthopaedic": "orthopedics",
+    }
+
     KNOWS_BASE_URL = "https://api.nullht.com/v1"
     KNOWS_SOURCES = {
         "paper_en":       {"label": "英文论文", "endpoint": "/evidences/ai_search_paper_en", "max": 40},
@@ -214,6 +240,8 @@ class MedicalDataQAMCPServer:
         if use_ml:
             ml_result = self._ml_classify_department(text_content)
             primary = ml_result["primary"]
+            # 别名标准化（如 cardiovascular → cardiology）
+            primary = self.DEPARTMENT_ALIASES.get(primary, primary)
             confidence = ml_result["confidence"]
             alternatives = ml_result["alternatives"]
             method = "ml_model"
