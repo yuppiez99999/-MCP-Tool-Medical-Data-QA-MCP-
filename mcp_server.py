@@ -1253,13 +1253,20 @@ def _register_tools():
 
     @_mcp.tool(name="assess_with_evidence",
                description="质量评估+文献检索联动：评估质量的同时自动检索相关循证医学文献")
-    def tool_assess_ev(records: list, department: str = None, search_sources: list = None) -> dict:
-        return _backend.assess_with_evidence(records, department, search_sources)
+    def tool_assess_ev(records: list, query: str = "", source: str = "paper_en",
+                       department: str = None, evidence_count: int = 5) -> dict:
+        return _backend.assess_with_evidence(records, query=query, source=source,
+                                              department=department, evidence_count=evidence_count)
 
     @_mcp.tool(name="generate_evidence_based_report",
                description="生成带循证医学文献引用的完整质量报告")
-    def tool_evidence_report(records: list, dataset_name: str = "未命名数据集", search_source: str = "paper_en") -> dict:
-        return _backend.generate_evidence_based_report(records, dataset_name, search_source)
+    def tool_evidence_report(records: list, dataset_name: str = "未命名数据集",
+                             department: str = None, evidence_per_dimension: int = 2,
+                             source: str = "paper_en") -> dict:
+        return _backend.generate_evidence_based_report(records, dataset_name=dataset_name,
+                                                        department=department,
+                                                        evidence_per_dimension=evidence_per_dimension,
+                                                        source=source)
 
 
 _register_tools()

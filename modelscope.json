@@ -87,8 +87,10 @@
         "type": "object",
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "待评估数据记录"},
+          "query": {"type": "string", "description": "自定义检索词（可选，不填则自动生成）", "default": ""},
+          "source": {"type": "string", "description": "文献数据源: paper_en/paper_cn/guide/trial/package_insert", "default": "paper_en"},
           "department": {"type": "string", "description": "可选，按科室筛选"},
-          "search_sources": {"type": "array", "items": {"type": "string"}, "description": "检索数据源列表", "default": ["paper_en"]}
+          "evidence_count": {"type": "integer", "description": "返回文献数量", "default": 5}
         },
         "required": ["records"]
       }
@@ -101,7 +103,9 @@
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "数据记录列表"},
           "dataset_name": {"type": "string", "description": "数据集名称", "default": "未命名数据集"},
-          "search_source": {"type": "string", "description": "文献检索数据源", "default": "paper_en"}
+          "department": {"type": "string", "description": "可选，按科室筛选"},
+          "evidence_per_dimension": {"type": "integer", "description": "每个维度引用文献数", "default": 2},
+          "source": {"type": "string", "description": "文献数据源: paper_en/paper_cn/guide/trial", "default": "paper_en"}
         },
         "required": ["records"]
       }
