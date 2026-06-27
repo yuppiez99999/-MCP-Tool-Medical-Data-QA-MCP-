@@ -88,16 +88,14 @@
 
 | # | 工具名称 | 功能 | 状态 | 备注 |
 |---|---------|------|------|------|
-| 1 | get_dataset_stats | 数据集统计查询 | ✅ 通过 | 390万数据统计 |
-| 2 | sample_real_records | 真实数据采样 | ✅ 通过 | 毫秒级响应，分层采样 |
-| 3 | assess_data_quality | 4维度质量评估 | ✅ 通过 | 完整性/准确性/时效性/合规性 |
-| 4 | classify_department | 科室自动分类 | ✅ 通过 | ML模型+关键词双引擎 |
-| 5 | grade_data_level | 数据等级评定 | ✅ 通过 | A/B/C/D四级 |
-| 6 | generate_quality_report | 质量报告生成 | ✅ 通过 | 科室分布+改进建议 |
-| 7 | search_medical_evidence | 循证医学检索 | ✅ 通过 | 6数据源，需API Key |
-| 8 | assess_with_evidence | 评估+文献联动 | ✅ 通过 | 质量评估+文献支撑 |
-| 9 | generate_evidence_based_report | 循证报告 | ✅ 通过 | 带文献引用的完整报告 |
-| 10 | search_similar_data | 相似质量检索 | ✅ 通过 | 40条历史匹配 |
+| 1 | assess_data_quality | 4维度质量评估 | ✅ 通过 | 完整性/准确性/时效性/合规性 |
+| 2 | classify_department | 科室自动分类 | ✅ 通过 | ML模型+关键词双引擎 |
+| 3 | grade_data_level | 数据等级评定 | ✅ 通过 | A/B/C/D四级 |
+| 4 | generate_quality_report | 质量报告生成 | ✅ 通过 | 科室分布+改进建议 |
+| 5 | search_similar_data | 相似质量检索 | ✅ 通过 | 40条历史匹配 |
+| 6 | search_medical_evidence | 循证医学检索 | ✅ 通过 | 6数据源，需API Key |
+| 7 | assess_with_evidence | 评估+文献联动 | ✅ 通过 | 质量评估+文献支撑 |
+| 8 | generate_evidence_based_report | 循证报告 | ✅ 通过 | 带文献引用的完整报告 |
 
 ---
 
