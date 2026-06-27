@@ -41,7 +41,7 @@
 - 📚 **循证医学集成** — KnowS API 支持中英文论文/临床指南检索，质量报告自动附带文献引用
 - 🖥️ **Gradio Web UI** — 8 个功能 Tab，可视化操作，支持 ModelScope Studio 部署
 - 🔒 **安全合规** — 不使用真实患者数据，脱敏 Token 化处理，代码及 README 均含显式医疗合规声明
-- 🧪 **自动化测试** — `tests/` 目录含 12 个功能测试用例（10/10 全部通过），科室分类全覆盖评测
+- 🧪 **自动化测试** — `tests/` 目录含 12 个功能测试用例（test_mcp_tools.py 10 个 + test_department_classifier.py 2 个，全部通过），科室分类全覆盖评测
 - 📖 **完整文档** — `docs/` 目录含参赛合规检查清单、评测数据报告、演示视频脚本
 
 ---
@@ -51,7 +51,7 @@
 ### 魔搭展示链接
 
 - **MCP 工具**: [https://modelscope.cn/mcp/servers/yuppiez/leo](https://modelscope.cn/mcp/servers/yuppiez/leo)
-- **Gradio Studio**: （部署中，详见 [DEPLOYMENT.md](DEPLOYMENT.md)）
+- **Gradio Web UI**: `python app.py` → 访问 `http://localhost:7860`（本地部署，详见 [DEPLOYMENT.md](DEPLOYMENT.md)）
 
 ### 本地运行步骤
 
@@ -295,15 +295,14 @@ search_medical_evidence(
 
 | 工具 | 状态 | 测试通过 |
 |------|------|---------|
-| get_dataset_stats | ✅ 可用 | 是 |
-| sample_real_records | ✅ 可用 | 是 |
 | assess_data_quality | ✅ 可用 | 是 |
 | classify_department | ✅ 可用 | 是 |
 | grade_data_level | ✅ 可用 | 是 |
 | generate_quality_report | ✅ 可用 | 是 |
-| search_medical_evidence | ✅ 可用 | 是（需 API Key） |
-| generate_evidence_based_report | ✅ 可用 | 是（需 API Key） |
 | search_similar_data | ✅ 可用 | 是 |
+| search_medical_evidence | ✅ 可用 | 是（需 API Key） |
+| assess_with_evidence | ✅ 可用 | 是（需 API Key） |
+| generate_evidence_based_report | ✅ 可用 | 是（需 API Key） |
 
 ---
 

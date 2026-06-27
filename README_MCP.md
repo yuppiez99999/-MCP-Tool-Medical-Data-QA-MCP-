@@ -1,158 +1,162 @@
 # 医疗数据质量评估 MCP Server
 
-> 小X宝医疗黑客松 2026 参赛作品 | 基于 **5,000,000 条** 真实医疗Token数据的智能质量评估MCP工具
+> 小X宝医疗黑客松 2026 参赛作品 | 基于 Model Context Protocol 的医疗数据质量评估 + 循证医学工具
 
 ## 简介
 
-医疗数据质量评估 MCP Server 是一个基于 [Model Context Protocol](https://modelcontextprotocol.ai/) 的服务，为AI Agent提供医疗数据质量评估能力。支持8大科室自动分类、4维度质量评分、A/B/C/D等级评定、完整质量报告生成，**接入真实500万条北数所合规数据集**。
+医疗数据质量评估 MCP Server 是一个基于 [Model Context Protocol](https://modelcontextprotocol.ai/) 的轻量服务（v1.2.0），为 AI Agent 提供医疗数据质量评估和循证医学检索能力。支持 8 大科室自动分类、4 维度质量评分、A/B/C/D 等级评定，并集成 KnowS 医学循证 API，支持中英文论文/临床指南/临床试验/药品说明书检索，质量报告可自动附带文献引用。
 
-## 功能特点
+数据基础：390 万条医疗健康 Token 数据（北数所合规），覆盖 8 大科室。内置基于 480 篇 KnowS 英文文献训练的 TF-IDF + LR 科室分类模型，准确率 83.3%。
 
-- **真实数据集** — 接入 5,000,000 条 A级/B级 医疗Token数据（北数所合规数据）
-- **高效采样** — 50,000条分层采样 + Parquet缓存，毫秒级响应
-- **质量评估** — 评估医疗数据完整性、准确性、时效性、合规性
-- **科室分类** — 自动识别8大医疗科室（放射科/病理科/神经内科/心血管科/检验科/骨科/儿科/急诊科）
-- **等级评定** — A级(高质量)/B级(良好)/C级(基础)/D级(不达标)
-- **质量报告** — 生成含科室分布、维度分析、改进建议的完整报告
-- **相似检索** — 基于真实Token_id检索相似质量画像的历史数据
-- **数据采样** — 从真实数据集中随机采样记录用于预览和测试
+## 8 大 MCP 工具
 
-## 数据基础
-
-| 指标 | 数值 |
-|------|------|
-| 数据集总行数 | 5,000,000 条 |
-| 数据来源 | 北数所A级/B级医疗Token数据集 |
-| 采样规模 | 50,000 条（分层采样） |
-| A级数据 | 4,169,292 条 (83.4%) |
-| B级数据 | 830,708 条 (16.6%) |
-| 覆盖科室 | 8大医疗科室 |
-| 数据类型 | 8种（CT影像/血液检验/病理切片/心电图/超声/X光/生长记录/分诊） |
-| 质量分范围 | 94.00 - 100.00 |
-| 合规分 | 100.00 (全部合规) |
-
-### 数据字段
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| token_id | string | Token唯一标识 |
-| domain | string | 数据领域 (healthcare) |
-| category | string | 医疗科室 |
-| data_type | string | 数据类型 |
-| entity_id | string | 实体标识（脱敏） |
-| data_quality_score | float | 综合质量分 (94-100) |
-| token_level | string | 等级 (A/B) |
-| completeness | float | 完整性分 |
-| accuracy | float | 准确性分 |
-| timeliness | float | 时效性分 |
-| compliance_score | float | 合规性分 |
-| created_at | datetime | 创建时间 |
+| 工具 | 描述 | 必填参数 |
+|------|------|---------|
+| `assess_data_quality` | 评估医疗数据质量：4维度评分+综合分+等级 | `records` |
+| `classify_department` | 自动识别医疗科室（ML模型优先，规则引擎兜底） | `record` |
+| `grade_data_level` | 数据等级评定（A/B/C/D级）+推荐用途 | `quality_score` |
+| `generate_quality_report` | 生成完整质量报告（科室分布+维度分析+改进建议） | `records` |
+| `search_similar_data` | 检索与给定质量画像相似的历史数据 | `quality_profile` |
+| `search_medical_evidence` | KnowS 医学循证检索：论文/指南/试验/药品说明书 | `query` |
+| `assess_with_evidence` | 质量评估+文献检索联动：自动生成检索词并检索相关文献 | `records` |
+| `generate_evidence_based_report` | 带循证文献引用的完整质量报告 | `records` |
 
 ## 快速开始
+
+### 环境要求
+
+- Python 3.10+
+- FastMCP 3.4+
+- Pandas、NumPy、PyArrow、scikit-learn
+- `requests`（KnowS 循证检索需要）
 
 ### 安装
 
 ```bash
-pip install fastmcp pandas numpy pyarrow
+pip install fastmcp pandas numpy pyarrow scikit-learn requests python-dotenv
 ```
 
-### 首次启动（生成采样缓存）
+### 配置环境变量（循证检索功能需要）
 
 ```bash
-# 从500万条CSV中分层采样5万条，缓存为Parquet
-python data/loader.py
+# 复制 .env.example 为 .env
+cp .env.example .env
+
+# 编辑 .env，填入 KnowS API Key
+KNOWS_API_KEY=sk-knows-xxx
 ```
 
 ### 运行 MCP Server
 
 ```bash
-python server.py
+python mcp_server.py
 ```
 
 ### MCP 客户端配置
 
-在 MCP 客户端（如 Claude Desktop、Cursor、Cherry Studio）的配置文件中添加：
+在 Claude Desktop 或其他 MCP 客户端的配置文件中添加：
 
 ```json
 {
   "mcpServers": {
     "medical-data-qa": {
       "command": "python",
-      "args": ["server.py"],
-      "cwd": "/path/to/medical-data-qa-mcp"
+      "args": ["path/to/mcp_server.py"]
     }
   }
 }
 ```
 
-## 工具列表（7个）
+## 工具使用示例
 
-| 工具 | 描述 | 参数 | 数据源 |
-|------|------|------|--------|
-| `get_dataset_stats` | 获取数据集统计信息 | 无 | 真实数据 |
-| `assess_data_quality` | 评估医疗数据质量 | records, department? | 输入数据 |
-| `classify_department` | 自动科室分类 | record | 输入数据 |
-| `grade_data_level` | 数据等级评定 | quality_score | 算法 |
-| `generate_quality_report` | 生成完整报告 | records, dataset_name? | 输入数据 |
-| `search_similar_data` | 检索相似数据 | quality_profile, department?, top_k? | **真实数据** |
-| `sample_real_records` | 采样真实记录 | n, department?, level? | **真实数据** |
-
-## 使用示例
-
-### 获取数据集统计
+### 1. 评估数据质量
 
 ```python
-result = await client.call_tool("get_dataset_stats", {})
-# 返回: {
-#   "dataset_info": {"total_rows": 5000000, "sample_size": 50000, ...},
-#   "level_distribution": {"A": 41689, "B": 8311},
-#   "by_department": {"radiology": {...}, "pathology": {...}, ...}
-# }
+records = [
+    {
+        "completeness": 95, "accuracy": 92,
+        "timeliness": 88, "compliance": 96,
+        "data_type": "image", "department": "radiology"
+    },
+    {
+        "completeness": 60, "accuracy": 65,
+        "timeliness": 55, "compliance": 70,
+        "data_type": "lab", "department": "laboratory"
+    }
+]
+result = server.assess_data_quality(records)
+# 返回: average_quality_score, level_distribution,
+#       department_distribution, details (含逐条建议)
 ```
 
-### 采样真实记录
+### 2. 科室自动分类（ML 模型）
 
 ```python
-result = await client.call_tool("sample_real_records", {
-    "n": 5,
-    "department": "radiology",
-    "level": "A"
-})
-# 返回真实Token记录，包含真实token_id
+record = {
+    "text": "CT scan of brain showing acute ischemic stroke",
+    "data_type": "image"
+}
+result = server.classify_department(record)
+# 返回: primary_department, department_cn, confidence,
+#       alternatives, classification_method (ml_model/rule_based),
+#       model_info (model_type, training_samples, top_keywords)
 ```
 
-### 检索相似数据
+### 3. KnowS 循证医学检索
 
 ```python
-result = await client.call_tool("search_similar_data", {
-    "quality_profile": {"completeness": 98, "accuracy": 97, "timeliness": 96, "compliance": 100},
-    "department": "cardiology",
-    "top_k": 10
-})
-# 返回真实数据集中相似度最高的10条记录
+# 检索中文论文
+result = server.search_medical_evidence(
+    query="CT影像质量控制标准",
+    source="paper_cn",
+    max_results=10
+)
+
+# 检索临床指南
+result = server.search_medical_evidence(
+    query="diabetes management guideline",
+    source="guide",
+    max_results=5
+)
+
+# 支持的数据源: paper_en / paper_cn / meeting / guide / trial / package_insert
 ```
 
-### 评估数据质量
+### 4. 质量评估 + 文献联动
 
 ```python
-result = await client.call_tool("assess_data_quality", {
-    "records": [
-        {"completeness": 98, "accuracy": 97, "timeliness": 96, "compliance_score": 100, "data_type": "ct_image"},
-        {"completeness": 60, "accuracy": 65, "timeliness": 55, "compliance_score": 70, "data_type": "blood_test"},
-    ]
-})
+result = server.assess_with_evidence(
+    records=records,
+    source="paper_en",
+    evidence_count=5
+)
+# 自动根据科室和质量薄弱维度生成检索词，
+# 检索相关文献作为改进依据
+```
+
+### 5. 带文献引用的报告
+
+```python
+result = server.generate_evidence_based_report(
+    records=records,
+    dataset_name="放射科测试数据集",
+    evidence_per_dimension=2,
+    source="paper_en"
+)
+# 每个质量薄弱维度自动检索对应文献，
+# 生成带编号引用的改进建议
 ```
 
 ## 质量评估标准
 
-### 4维度加权评分
+### 4 维度加权评分
 
 | 维度 | 权重 | 说明 |
 |------|------|------|
-| 完整性 | 30% | 字段缺失率、关键字段覆盖 |
-| 准确性 | 35% | 数据交叉验证、逻辑一致性 |
-| 时效性 | 15% | 数据更新频率、时效窗口 |
-| 合规性 | 20% | 知情同意、脱敏处理、审计溯源 |
+| 完整性 (completeness) | 30% | 字段缺失率、关键字段覆盖 |
+| 准确性 (accuracy) | 35% | 数据交叉验证、逻辑一致性 |
+| 时效性 (timeliness) | 15% | 数据更新频率、时效窗口 |
+| 合规性 (compliance) | 20% | 知情同意、脱敏处理、审计溯源 |
 
 ### 数据等级
 
@@ -161,46 +165,103 @@ result = await client.call_tool("assess_data_quality", {
 | A级 | 90-100 | 高质量，可直接训练 | 模型训练、临床决策支持 | 1.50x |
 | B级 | 75-89 | 良好质量，清洗后可用 | 模型预训练、数据分析 | 1.00x |
 | C级 | 60-74 | 基础质量，需人工审核 | 统计分析、趋势研究 | 0.60x |
-| D级 | <60 | 不达标 | 仅限内部参考 | 0.30x |
+| D级 | <60 | 质量不达标 | 仅限内部参考 | 0.30x |
 
-### 真实数据类型映射
+## 科室分类模型
 
-| 数据类型 | 中文名 | 对应科室 |
-|---------|--------|---------|
-| ct_image | CT影像 | 放射科 |
-| blood_test | 血液检验 | 检验科 |
-| pathology_slide | 病理切片 | 病理科 |
-| ecg | 心电图 | 心血管科 |
-| ultrasound | 超声 | 放射科 |
-| x_ray | X光 | 骨科 |
-| growth_record | 生长记录 | 儿科 |
-| triage | 分诊记录 | 急诊科 |
+### ML 模型信息
 
-## 技术栈
+| 指标 | 数值 |
+|------|------|
+| 模型类型 | TF-IDF + Logistic Regression |
+| 训练样本 | 480 篇（8 科室 × 60 篇，KnowS 英文文献） |
+| 测试样本 | 24 条手工标注 |
+| 测试准确率 | 83.3%（20/24） |
+| 交叉验证 | 71.67% ± 3.12%（5折） |
+| 别名映射 | 4 条规则（cardiovascular→cardiology 等） |
+| 模型大小 | ~500 KB |
+| 推理速度 | < 10ms/条 |
 
-- **MCP框架**: FastMCP 3.4+ (Python)
-- **传输协议**: stdio
-- **数据集**: 5,000,000条真实医疗Token数据（北数所合规数据）
-- **数据缓存**: Parquet (Snappy压缩)
-- **数据处理**: Pandas + NumPy
-- **开源协议**: MIT
+### 8 大科室
+
+| 科室键 | 中文名 | 权重 | 说明 |
+|--------|--------|------|------|
+| radiology | 放射科 | 1.50 | 影像数据稀缺，AI 训练需求高 |
+| pathology | 病理科 | 1.40 | 病理标注数据专业度高 |
+| neurology | 神经内科 | 1.35 | 脑电/神经影像价值 |
+| cardiology | 心血管科 | 1.30 | ECG 数据临床价值高 |
+| laboratory | 检验科 | 1.00 | 检验报告结构化 |
+| orthopedics | 骨科 | 0.95 | X-Ray 影像 |
+| pediatrics | 儿科 | 0.90 | 儿童发育数据 |
+| emergency | 急诊科 | 0.85 | 分诊记录 |
+
+## KnowS 循证医学集成
+
+循证检索功能通过 KnowS API 实现，支持以下文献数据源：
+
+| 数据源 | 键 | 最大返回 | 说明 |
+|--------|-----|---------|------|
+| 英文论文 | `paper_en` | 40 | 英文医学期刊论文 |
+| 中文论文 | `paper_cn` | 40 | 中文医学期刊论文 |
+| 会议论文 | `meeting` | 5 | 学术会议论文 |
+| 临床指南 | `guide` | 5 | 临床实践指南 |
+| 临床试验 | `trial` | 5 | 注册临床试验 |
+| 药品说明书 | `package_insert` | 5 | 药品说明书 |
+
+返回的每条文献包含：标题、摘要、期刊、出版日期、作者、DOI、研究类型、影响因子、中科院分区、WOS 分区、PDF 可用状态。
+
+使用时需配置 `KNOWS_API_KEY` 环境变量。未配置时不报错，返回提示信息。
+
+## 数据基础
+
+| 指标 | 数值 |
+|------|------|
+| 数据总量 | 390 万条医疗健康 Token 记录 |
+| 数据来源 | 北数所合规医疗 Token 数据集 |
+| 覆盖科室 | 8 大科室 |
+| 数据类型 | 8 种（影像/文本/心电/检验/病理/基因/生命体征/其他） |
+| 质量分级 | A 级(83.4%) / B 级(16.6%) |
+| 隐私合规 | 无真实患者信息，纯 Token 结构 |
 
 ## 性能指标
 
 | 指标 | 数值 |
 |------|------|
-| 首次采样耗时 | ~30秒 (500万条CSV) |
-| 后续加载耗时 | <100ms (Parquet缓存) |
-| 工具响应时间 | <50ms (单次调用) |
-| 内存占用 | ~50MB (5万条采样) |
-| 缓存文件大小 | ~2MB (Parquet) |
+| 工具响应时间 | < 50ms（单次调用，不含 KnowS API） |
+| KnowS 检索耗时 | 1-30s（取决于 API 响应） |
+| ML 分类耗时 | < 10ms/条 |
+| 内存占用 | ~50MB |
+
+## 技术栈
+
+- **MCP 框架**: 轻量自实现（零第三方 MCP 依赖）
+- **传输协议**: stdio
+- **ML 模型**: scikit-learn（TF-IDF + Logistic Regression）
+- **循证检索**: KnowS API（RESTful）
+- **数据处理**: Pandas + NumPy
+- **文件格式**: pickle（模型）、Parquet（数据缓存）
+
+## 医疗合规性声明
+
+重要提示：
+
+1. 本工具仅用于医疗数据质量评估和医学文献检索辅助，不提供任何医疗诊断建议
+2. 本工具的输出不能替代专业医生的诊断和治疗意见，任何医疗决策应由执业医师做出
+3. 本工具使用脱敏 Token 化数据进行演示，不包含任何真实患者隐私信息
+4. 循证医学文献检索结果仅供参考，文献的适用性需由专业医疗人员判断
+5. 使用本工具产生的任何后果，开发者不承担任何法律责任
+
+## 参赛信息
+
+- **比赛**: 小X宝开源医疗社区黑客松 2026 × ModelScope
+- **赛道**: 医疗垂直领域 MCP 工具/Skill 开发
+- **技术形式**: MCP Tool + Gradio Studio
+- **魔搭 MCP**: [https://modelscope.cn/mcp/servers/yuppiez/leo](https://modelscope.cn/mcp/servers/yuppiez/leo)
 
 ## 许可证
 
 MIT License — 允许商用、修改、分发
 
-## 贡献
+## 作者
 
-**作者**: yuppiez99999
-
-小X宝医疗黑客松 2026 参赛作品
+**yuppiez99999** — 项目负责人，全栈开发，MCP 工具设计
