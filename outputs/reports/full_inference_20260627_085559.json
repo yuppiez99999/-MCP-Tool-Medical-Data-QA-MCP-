@@ -1,0 +1,98 @@
+{
+  "phase": "2_inference",
+  "report": {
+    "pytorch_infer": {
+      "records": 50000,
+      "infer_time_sec": 0.39,
+      "throughput_per_sec": 128205,
+      "level_accuracy": 0.8338,
+      "quality_mae": 1.5073,
+      "category_accuracy": 1.0,
+      "model_path": "E:\\各种PY程序\\18-医疗AI模型系统\\outputs\\healthcare_token_classifier.pt"
+    },
+    "department_infer": {
+      "test_cases": 10,
+      "correct": 8,
+      "overall_accuracy": 0.8,
+      "per_department_accuracy": {
+        "radiology": 1.0,
+        "laboratory": 0.0,
+        "pathology": 1.0,
+        "cardiovascular": 1.0,
+        "neurology": 0.0,
+        "orthopedics": 1.0,
+        "emergency": 1.0,
+        "pediatrics": 1.0
+      }
+    },
+    "mcp_tools": {
+      "assess_data_quality": {
+        "avg_score": 73.01,
+        "level_dist": {
+          "A": 1,
+          "B": 2,
+          "C": 1,
+          "D": 1
+        },
+        "status": "OK"
+      },
+      "classify_department": {
+        "primary": "放射科",
+        "confidence": 0.22,
+        "method": "ml_model",
+        "status": "OK"
+      },
+      "grade_93": {
+        "level": "A",
+        "recommend": "模型训练、临床决策支持"
+      },
+      "grade_82": {
+        "level": "B",
+        "recommend": "模型预训练、数据分析"
+      },
+      "grade_67": {
+        "level": "C",
+        "recommend": "统计分析、趋势研究"
+      },
+      "grade_45": {
+        "level": "D",
+        "recommend": "仅限内部参考"
+      },
+      "generate_quality_report": {
+        "avg_quality": 73.01,
+        "overall_level": "C",
+        "weak_dims": [
+          "completeness",
+          "accuracy",
+          "timeliness",
+          "compliance"
+        ],
+        "status": "OK"
+      },
+      "search_similar": {
+        "found": 40,
+        "top_similarity": 0.9352
+      },
+      "search_medical_evidence": {
+        "found": 5,
+        "top_if": 15.1,
+        "status": "OK"
+      },
+      "assess_with_evidence": {
+        "avg_quality": 86.57,
+        "has_evidence": true,
+        "status": "OK"
+      },
+      "evidence_based_report": {
+        "overall_level": "C",
+        "total_refs": 2,
+        "weak_dims": [
+          "完整性",
+          "时效性"
+        ],
+        "status": "OK"
+      }
+    },
+    "total_time_sec": 29.2
+  }
+}

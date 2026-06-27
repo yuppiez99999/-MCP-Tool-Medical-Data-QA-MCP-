@@ -1,0 +1,190 @@
+{
+  "phase": "1B_department",
+  "metrics": {
+    "total_literature": 480,
+    "fetch_time_sec": 123.6,
+    "train_time_sec": 3.6,
+    "test_accuracy": 0.9,
+    "departments_trained": 8,
+    "model_path": "E:\\各种PY程序\\18-医疗AI模型系统\\outputs\\department_classifier.pkl",
+    "model_size_kb": 497.0,
+    "top_keywords_per_dept": {
+      "cardiovascular": [
+        {
+          "word": "cardiovascular",
+          "weight": 2.8914
+        },
+        {
+          "word": "coronary",
+          "weight": 2.4295
+        },
+        {
+          "word": "atherosclerosis",
+          "weight": 2.0409
+        },
+        {
+          "word": "heart",
+          "weight": 1.9378
+        },
+        {
+          "word": "myocardial",
+          "weight": 1.7643
+        }
+      ],
+      "emergency": [
+        {
+          "word": "shock",
+          "weight": 2.853
+        },
+        {
+          "word": "critical",
+          "weight": 2.2254
+        },
+        {
+          "word": "emergency",
+          "weight": 2.1796
+        },
+        {
+          "word": "care",
+          "weight": 2.001
+        },
+        {
+          "word": "icu",
+          "weight": 1.8384
+        }
+      ],
+      "laboratory": [
+        {
+          "word": "chemistry",
+          "weight": 2.6573
+        },
+        {
+          "word": "laboratory",
+          "weight": 2.5603
+        },
+        {
+          "word": "clinical chemistry",
+          "weight": 2.1489
+        },
+        {
+          "word": "clinical",
+          "weight": 1.8846
+        },
+        {
+          "word": "tests",
+          "weight": 1.6913
+        }
+      ],
+      "neurology": [
+        {
+          "word": "eeg",
+          "weight": 2.2684
+        },
+        {
+          "word": "dementia",
+          "weight": 2.2242
+        },
+        {
+          "word": "brain",
+          "weight": 2.0364
+        },
+        {
+          "word": "cognitive",
+          "weight": 1.9493
+        },
+        {
+          "word": "pd",
+          "weight": 1.8268
+        }
+      ],
+      "orthopedics": [
+        {
+          "word": "fracture",
+          "weight": 2.869
+        },
+        {
+          "word": "surgery",
+          "weight": 2.798
+        },
+        {
+          "word": "spine",
+          "weight": 2.6562
+        },
+        {
+          "word": "bone",
+          "weight": 2.5033
+        },
+        {
+          "word": "orthopaedic",
+          "weight": 2.362
+        }
+      ],
+      "pathology": [
+        {
+          "word": "cancer",
+          "weight": 2.8825
+        },
+        {
+          "word": "pathology",
+          "weight": 2.4907
+        },
+        {
+          "word": "tissue",
+          "weight": 2.3302
+        },
+        {
+          "word": "histological",
+          "weight": 1.6161
+        },
+        {
+          "word": "specimens",
+          "weight": 1.4491
+        }
+      ],
+      "pediatrics": [
+        {
+          "word": "children",
+          "weight": 3.3315
+        },
+        {
+          "word": "neonatal",
+          "weight": 2.7833
+        },
+        {
+          "word": "infants",
+          "weight": 2.2664
+        },
+        {
+          "word": "paediatric",
+          "weight": 1.9303
+        },
+        {
+          "word": "health",
+          "weight": 1.898
+        }
+      ],
+      "radiology": [
+        {
+          "word": "ct",
+          "weight": 2.7228
+        },
+        {
+          "word": "mri",
+          "weight": 2.5082
+        },
+        {
+          "word": "image",
+          "weight": 2.3644
+        },
+        {
+          "word": "imaging",
+          "weight": 2.3162
+        },
+        {
+          "word": "ray",
+          "weight": 1.9483
+        }
+      ]
+    }
+  }
+}
