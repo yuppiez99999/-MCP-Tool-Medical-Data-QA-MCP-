@@ -1,6 +1,6 @@
 # ModelScope MCP 托管部署必需
-gradio[mcp]==5.29.0
-mcp==1.8.1
+gradio[mcp]==6.7.0
+mcp==1.23.0
 # 业务依赖
 pandas>=2.0
 numpy>=1.24
