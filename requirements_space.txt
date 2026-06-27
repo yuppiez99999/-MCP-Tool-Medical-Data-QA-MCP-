@@ -1,6 +1,6 @@
 # ModelScope MCP 托管部署必需
+# 注意：gradio[mcp] 会自动安装兼容的 mcp 包，不要重复指定 mcp== 版本
 gradio[mcp]==5.29.0
-mcp==1.8.1
 # 业务依赖
 pandas>=2.0
 numpy>=1.24

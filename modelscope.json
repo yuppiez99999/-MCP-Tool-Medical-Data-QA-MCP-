@@ -112,10 +112,10 @@
     }
   ],
   "deployment": {
-    "type": "modelscope_space",
-    "space_sdk": "gradio",
+    "type": "github",
     "app_file": "app.py",
-    "requirements_file": "requirements_space.txt",
-    "python_version": "3.10"
+    "requirements_file": "requirements.txt",
+    "python_version": "3.10",
+    "port": 7860
   }
 }
