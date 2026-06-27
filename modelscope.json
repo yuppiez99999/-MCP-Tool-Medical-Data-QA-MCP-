@@ -9,111 +9,101 @@
   "category": "healthcare",
   "tools": [
     {
-      "name": "get_dataset_stats",
-      "description": "获取真实医疗数据集统计信息（规模、等级分布、科室分布）",
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-      }
-    },
-    {
-      "name": "sample_real_records",
-      "description": "采样真实医疗Token数据记录",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "department": {"type": "string", "description": "科室名称"},
-          "n": {"type": "integer", "description": "采样数量", "default": 5}
-        },
-        "required": []
-      }
-    },
-    {
       "name": "assess_data_quality",
-      "description": "评估医疗数据质量：完整性、准确性、时效性、合规性4维度评分",
+      "description": "评估医疗数据质量：完整性、准确性、时效性、合规性4维度评分，返回综合质量分和A/B/C/D等级",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "records": {"type": "array", "items": {"type": "object"}},
-          "department": {"type": "string"}
+          "records": {"type": "array", "items": {"type": "object"}, "description": "待评估的医疗数据记录列表"},
+          "department": {"type": "string", "description": "可选，按科室筛选"}
         },
         "required": ["records"]
       }
     },
     {
       "name": "classify_department",
-      "description": "自动识别医疗数据所属科室（8大科室，ML文献驱动模型+规则双引擎）",
+      "description": "自动识别医疗数据所属科室（ML模型+规则引擎双引擎，支持放射科/心血管科/神经内科等8大科室）",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "record": {"type": "object"}
+          "record": {"type": "object", "description": "含text/data_type字段的医疗数据记录"}
         },
         "required": ["record"]
       }
     },
     {
       "name": "grade_data_level",
-      "description": "评定医疗数据等级（A级/B级/C级/D级）",
+      "description": "根据综合质量分评定数据等级（A/B/C/D四级），含推荐用途与定价系数",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "quality_score": {"type": "number"}
+          "quality_score": {"type": "number", "description": "综合质量评分(0-100)"}
         },
         "required": ["quality_score"]
       }
     },
     {
       "name": "generate_quality_report",
-      "description": "生成完整的医疗数据质量报告",
+      "description": "生成完整医疗数据质量报告：科室分布、维度分析、改进建议",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "records": {"type": "array", "items": {"type": "object"}},
-          "dataset_name": {"type": "string"}
-        },
-        "required": ["records"]
-      }
-    },
-    {
-      "name": "search_medical_evidence",
-      "description": "循证医学文献检索（支持中英文论文、临床指南、临床试验等）",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {"type": "string", "description": "检索关键词"},
-          "source": {"type": "string", "description": "数据源: paper_en/paper_cn/guide/clinical_trial/drug_label"},
-          "max_results": {"type": "integer", "description": "返回数量", "default": 10}
-        },
-        "required": ["query"]
-      }
-    },
-    {
-      "name": "generate_evidence_based_report",
-      "description": "生成带循证医学文献引用的质量报告（自动识别薄弱维度+文献支撑改进建议）",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "records": {"type": "array", "items": {"type": "object"}},
-          "department": {"type": "string"},
-          "dataset_name": {"type": "string"},
-          "evidence_source": {"type": "string", "description": "文献数据源"},
-          "papers_per_dimension": {"type": "integer", "description": "每个维度文献数", "default": 2}
+          "records": {"type": "array", "items": {"type": "object"}, "description": "数据记录列表"},
+          "dataset_name": {"type": "string", "description": "数据集名称", "default": "未命名数据集"}
         },
         "required": ["records"]
       }
     },
     {
       "name": "search_similar_data",
-      "description": "检索与给定质量画像相似的历史数据",
+      "description": "检索与给定质量画像相似的历史数据记录（欧氏距离匹配）",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "quality_profile": {"type": "object"},
-          "department": {"type": "string"},
-          "top_k": {"type": "integer", "default": 10}
+          "quality_profile": {"type": "object", "description": "质量维度画像"},
+          "department": {"type": "string", "description": "可选，按科室筛选"},
+          "top_k": {"type": "integer", "description": "返回数量", "default": 10}
         },
         "required": ["quality_profile"]
+      }
+    },
+    {
+      "name": "search_medical_evidence",
+      "description": "KnowS循证医学检索：支持英文论文/中文论文/临床指南/临床试验/药品说明书6种数据源",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "检索关键词"},
+          "source": {"type": "string", "description": "数据源: paper_en/paper_cn/guide/clinical_trial/drug_label", "default": "paper_en"},
+          "max_results": {"type": "integer", "description": "返回数量", "default": 10}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "assess_with_evidence",
+      "description": "质量评估+文献检索联动：评估质量的同时自动检索相关循证医学文献",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "records": {"type": "array", "items": {"type": "object"}, "description": "待评估数据记录"},
+          "department": {"type": "string", "description": "可选，按科室筛选"},
+          "search_sources": {"type": "array", "items": {"type": "string"}, "description": "检索数据源列表", "default": ["paper_en"]}
+        },
+        "required": ["records"]
+      }
+    },
+    {
+      "name": "generate_evidence_based_report",
+      "description": "生成带循证医学文献引用的完整质量报告",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "records": {"type": "array", "items": {"type": "object"}, "description": "数据记录列表"},
+          "dataset_name": {"type": "string", "description": "数据集名称", "default": "未命名数据集"},
+          "search_source": {"type": "string", "description": "文献检索数据源", "default": "paper_en"}
+        },
+        "required": ["records"]
       }
     }
   ],

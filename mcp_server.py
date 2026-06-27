@@ -1269,8 +1269,10 @@ _register_tools()
 # ============================================================
 if __name__ == "__main__":
     if HAS_FASTMCP and _mcp is not None:
-        print("=== 医疗数据质量评估 MCP Server 启动 ===")
-        print(f"已注册 {len(_mcp._tool_manager._tools)} 个工具")
+        print("=== 医疗数据质量评估 MCP Server (FastMCP 3.4+) 启动 ===", flush=True)
+        print("已注册 8 个工具: assess_data_quality, classify_department, grade_data_level, "
+              "generate_quality_report, search_similar_data, search_medical_evidence, "
+              "assess_with_evidence, generate_evidence_based_report", flush=True)
         _mcp.run(transport="stdio")
     else:
         # 无 FastMCP 时回退到本地测试

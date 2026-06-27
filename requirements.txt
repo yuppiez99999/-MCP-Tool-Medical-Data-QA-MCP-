@@ -26,6 +26,9 @@ requests>=2.31
 # Gradio UI (ModelScope Space)
 gradio>=4.0
 
+# MCP 协议 (ModelScope MCP 托管部署)
+fastmcp>=3.0
+
 # 其他
 joblib>=1.3
 matplotlib>=3.7
