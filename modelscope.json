@@ -1,17 +1,30 @@
 {
+  "schema_version": "1.0",
   "name": "medical-data-qa-mcp",
   "display_name": "医疗数据质量评估 MCP Tool",
-  "description": "基于医疗Token数据的智能质量评估+循证医学工具。支持4维度质量评分、8大科室ML自动分类、循证文献检索、带引用的质量报告生成。可被任何AI Agent调用。",
+  "description": "基于医疗Token数据的智能质量评估+循证医学工具。支持4维度质量评分、8大科室ML自动分类、循证文献检索、带引用的质量报告生成。可被任何AI Agent调用。小X宝医疗黑客松2026参赛作品。",
   "version": "2.0.0",
-  "license": "MIT",
-  "author": "小X宝医疗黑客松参赛团队",
-  "tags": ["医疗", "数据质量", "MCP", "Agent Skill", "循证医学", "科室分类", "AI辅助"],
-  "category": "healthcare",
+  "author": "yuppiez99999",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuppiez99999/-MCP-Tool-Medical-Data-QA-MCP-.git"
+  },
+  "transport": {
+    "type": "sse",
+    "command": "python",
+    "args": ["app.py"],
+    "env": {
+      "KNOWS_API_KEY": {
+        "description": "KnowS 医学循证检索 API 密钥",
+        "required": false
+      }
+    }
+  },
   "tools": [
     {
       "name": "assess_data_quality",
       "description": "评估医疗数据质量：完整性、准确性、时效性、合规性4维度评分，返回综合质量分和A/B/C/D等级",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "待评估的医疗数据记录列表"},
@@ -23,7 +36,7 @@
     {
       "name": "classify_department",
       "description": "自动识别医疗数据所属科室（ML模型+规则引擎双引擎，支持放射科/心血管科/神经内科等8大科室）",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "record": {"type": "object", "description": "含text/data_type字段的医疗数据记录"}
@@ -34,7 +47,7 @@
     {
       "name": "grade_data_level",
       "description": "根据综合质量分评定数据等级（A/B/C/D四级），含推荐用途与定价系数",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "quality_score": {"type": "number", "description": "综合质量评分(0-100)"}
@@ -45,7 +58,7 @@
     {
       "name": "generate_quality_report",
       "description": "生成完整医疗数据质量报告：科室分布、维度分析、改进建议",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "数据记录列表"},
@@ -57,7 +70,7 @@
     {
       "name": "search_similar_data",
       "description": "检索与给定质量画像相似的历史数据记录（欧氏距离匹配）",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "quality_profile": {"type": "object", "description": "质量维度画像"},
@@ -70,7 +83,7 @@
     {
       "name": "search_medical_evidence",
       "description": "KnowS循证医学检索：支持英文论文/中文论文/临床指南/临床试验/药品说明书6种数据源",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "query": {"type": "string", "description": "检索关键词"},
@@ -83,7 +96,7 @@
     {
       "name": "assess_with_evidence",
       "description": "质量评估+文献检索联动：评估质量的同时自动检索相关循证医学文献",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "待评估数据记录"},
@@ -98,7 +111,7 @@
     {
       "name": "generate_evidence_based_report",
       "description": "生成带循证医学文献引用的完整质量报告",
-      "inputSchema": {
+      "parameters": {
         "type": "object",
         "properties": {
           "records": {"type": "array", "items": {"type": "object"}, "description": "数据记录列表"},
@@ -112,10 +125,10 @@
     }
   ],
   "deployment": {
-    "type": "github",
-    "app_file": "app.py",
-    "requirements_file": "requirements.txt",
-    "python_version": "3.10",
-    "port": 7860
+    "type": "hostable",
+    "resources": {
+      "cpu": "2",
+      "memory": "4Gi"
+    }
   }
 }
