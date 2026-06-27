@@ -48,6 +48,12 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
+try:
+    from fastmcp import FastMCP
+    HAS_FASTMCP = True
+except ImportError:
+    HAS_FASTMCP = False
+
 # ============================================================
 # MCP Server 框架（轻量实现，无需第三方MCP依赖）
 # ============================================================
@@ -1204,40 +1210,79 @@ class MedicalDataQAMCPServer:
 
 
 # ============================================================
-# 快速测试 / Demo
+# FastMCP 传输层 — 注册 8 大工具到 MCP 协议
+# ============================================================
+_mcp = FastMCP("medical-data-qa") if HAS_FASTMCP else None
+_backend = MedicalDataQAMCPServer()  # 业务逻辑复用
+
+
+def _register_tools():
+    """将后端 8 个方法注册为 FastMCP 工具"""
+    if not HAS_FASTMCP or _mcp is None:
+        return
+
+    @_mcp.tool(name="assess_data_quality",
+               description="评估医疗数据质量：完整性、准确性、合规性、时效性4维度评分，返回综合质量分和A/B/C/D等级")
+    def tool_assess(records: list, department: str = None) -> dict:
+        return _backend.assess_data_quality(records, department)
+
+    @_mcp.tool(name="classify_department",
+               description="自动识别医疗数据所属科室（ML模型+规则引擎双引擎，支持放射科/心血管科/神经内科等8大科室）")
+    def tool_classify(record: dict) -> dict:
+        return _backend.classify_department(record)
+
+    @_mcp.tool(name="grade_data_level",
+               description="根据综合质量分评定数据等级（A/B/C/D四级），含推荐用途与定价系数")
+    def tool_grade(quality_score: float) -> dict:
+        return _backend.grade_data_level(quality_score)
+
+    @_mcp.tool(name="generate_quality_report",
+               description="生成完整医疗数据质量报告：科室分布、维度分析、改进建议")
+    def tool_report(records: list, dataset_name: str = "未命名数据集") -> dict:
+        return _backend.generate_quality_report(records, dataset_name)
+
+    @_mcp.tool(name="search_similar_data",
+               description="检索与给定质量画像相似的历史数据记录（欧氏距离匹配）")
+    def tool_similar(quality_profile: dict, department: str = None, top_k: int = 10) -> dict:
+        return _backend.search_similar_data(quality_profile, department, top_k)
+
+    @_mcp.tool(name="search_medical_evidence",
+               description="KnowS循证医学检索：支持英文论文/中文论文/临床指南/临床试验/药品说明书6种数据源")
+    def tool_evidence(query: str, source: str = "paper_en", max_results: int = 10) -> dict:
+        return _backend.search_medical_evidence(query, source, max_results)
+
+    @_mcp.tool(name="assess_with_evidence",
+               description="质量评估+文献检索联动：评估质量的同时自动检索相关循证医学文献")
+    def tool_assess_ev(records: list, department: str = None, search_sources: list = None) -> dict:
+        return _backend.assess_with_evidence(records, department, search_sources)
+
+    @_mcp.tool(name="generate_evidence_based_report",
+               description="生成带循证医学文献引用的完整质量报告")
+    def tool_evidence_report(records: list, dataset_name: str = "未命名数据集", search_source: str = "paper_en") -> dict:
+        return _backend.generate_evidence_based_report(records, dataset_name, search_source)
+
+
+_register_tools()
+
+# ============================================================
+# 快速测试 / Demo (python mcp_server.py)
 # ============================================================
 if __name__ == "__main__":
-    server = MedicalDataQAMCPServer()
-
-    # 列出工具
-    print("=== 可用工具 ===")
-    for tool in server.list_tools():
-        print(f"  - {tool['name']}: {tool['description']}")
-
-    # 测试1: 评估数据质量
-    print("\n=== 测试: 评估数据质量 ===")
-    test_records = [
-        {
-            "completeness": 95, "accuracy": 92, "timeliness": 88, "compliance": 96,
-            "data_type": "image", "department": "radiology",
-        },
-        {
-            "completeness": 78, "accuracy": 85, "timeliness": 70, "compliance": 82,
-            "data_type": "lab", "department": "laboratory",
-        },
-        {
-            "completeness": 60, "accuracy": 65, "timeliness": 55, "compliance": 70,
-            "data_type": "text", "department": "pediatrics",
-        },
-    ]
-    result = server.assess_data_quality(test_records)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-
-    # 测试2: 生成完整报告
-    print("\n=== 测试: 生成质量报告 ===")
-    report = server.generate_quality_report(test_records, "测试数据集")
-    print(f"数据集: {report['dataset_name']}")
-    print(f"总记录: {report['summary']['total_records']}")
-    print(f"平均分: {report['summary']['average_quality']}")
-    print(f"等级分布: {report['summary']['level_distribution']}")
-    print(f"改进建议: {report['global_suggestions']}")
+    if HAS_FASTMCP and _mcp is not None:
+        print("=== 医疗数据质量评估 MCP Server 启动 ===")
+        print(f"已注册 {len(_mcp._tool_manager._tools)} 个工具")
+        _mcp.run(transport="stdio")
+    else:
+        # 无 FastMCP 时回退到本地测试
+        server = MedicalDataQAMCPServer()
+        print("=== 可用工具 ===")
+        for tool in server.list_tools():
+            print(f"  - {tool['name']}: {tool['description']}")
+        print("\n=== 测试: 评估数据质量 ===")
+        test_records = [
+            {"completeness": 95, "accuracy": 92, "timeliness": 88, "compliance": 96, "data_type": "image", "department": "radiology"},
+            {"completeness": 78, "accuracy": 85, "timeliness": 70, "compliance": 82, "data_type": "lab", "department": "laboratory"},
+            {"completeness": 60, "accuracy": 65, "timeliness": 55, "compliance": 70, "data_type": "text", "department": "pediatrics"},
+        ]
+        result = server.assess_data_quality(test_records)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
